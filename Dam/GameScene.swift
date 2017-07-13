@@ -50,7 +50,10 @@ class GameScene: SKScene {
     var cracks: [Crack] = []
     var cracksPositon: [CGPoint] = []
     
+    let coolDownLabel: SKLabelNode = SKLabelNode()
     var coolingDown = false
+    var ifPressedTwice = false
+    
     var windowContains = false
     
     var scoreLabel: SKLabelNode!
@@ -198,7 +201,19 @@ class GameScene: SKScene {
                 }
             }else{
                 if location.y > gameBottom && location.y < gameTop{
-                    print("COOL DOWN")
+                    if ifPressedTwice == false{
+                        ifPressedTwice = true
+                        addChild(coolDownLabel)
+                        
+                        coolDownLabel.text = "COOLING DOWN"
+                        coolDownLabel.fontName = "Didot Bold"
+                        coolDownLabel.fontSize = 36
+                        coolDownLabel.alpha = 0.6
+                        
+                        coolDownLabel.position.x = 160
+                        coolDownLabel.position.y = 400
+                        coolDownLabel.zPosition = 5
+                    }
                 }
             }
         }
@@ -292,6 +307,10 @@ class GameScene: SKScene {
     }
     
     override func update(_ currentTime: TimeInterval) {
+        if coolingDown == false{
+            coolDownLabel.removeFromParent()
+             ifPressedTwice = false
+        }
         if currentState == .playing {
             if cracks.count > 45678 {
                 gameOver()
