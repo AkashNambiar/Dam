@@ -17,21 +17,26 @@ enum playingState{
     case playing, notPlaying
 }
 
-class GameScene: SKScene {
+class GameScene: SKScene, SKPhysicsContactDelegate {
     
     var currentState: playingState = .playing
     
     var toolList: [tools] = []
     var toolPics: [SKSpriteNode] = []
     var specialTool: tools!
+    
     var toolX: [CGFloat] = [115, 206, 282, 38]
     var toolY: [CGFloat] = [100, 100, 44, 44]
+    var openWindowX: [CGFloat] = [83, 243, 83, 243, 83, 243]
+    var openWindowY: [CGFloat] = [412.5, 412.5, 310, 310, 207.5, 207.5]
     
     var num = 0
-    var frequency = 100
+    var frequency = 140
     
     let cementArea: SKSpriteNode = SKSpriteNode()
+    let tapeArea: SKSpriteNode = SKSpriteNode()
     var cement = false
+    var tape = false
     
     var pointerPosition = 0
     var previousPointer: SKNode!
@@ -47,6 +52,7 @@ class GameScene: SKScene {
     var waitBar: SKSpriteNode!
     var returnButton: MSButtonNode!
     var specialButton: MSButtonNode!
+    var currentTool: SKLabelNode!
     //var damArea: SKSpriteNode!
     
     var Score: Int = 0 {
@@ -57,17 +63,21 @@ class GameScene: SKScene {
     
     override func didMove(to view: SKView) {
         
+        physicsWorld.contactDelegate = self
+        
         scoreLabel = childNode(withName: "score") as! SKLabelNode
         trashButton = childNode(withName: "trashButton") as! MSButtonNode
         waitBar = childNode(withName: "waitBar") as! SKSpriteNode
         returnButton = childNode(withName: "//returnButton") as! MSButtonNode
         specialButton = childNode(withName: "specialButton") as! MSButtonNode
+        currentTool = childNode(withName: "currentTool") as! SKLabelNode
         //        damArea = childNode(withName: "damArea") as! SKSpriteNode
         
         trashButton.selectedHandler = {
             self.removeTool()
             self.addRandomTool()
             self.displayTools()
+            self.currentTool.text = self.getNameOfCurrentTool()
         }
         
         specialButton.selectedHandler = {
@@ -95,6 +105,7 @@ class GameScene: SKScene {
                 previousPointer.removeFromParent()
                 previousPointer = point
                 pointerPosition = 0
+                currentTool.text = getNameOfCurrentTool()
                 return
             }
             
@@ -104,12 +115,14 @@ class GameScene: SKScene {
                 previousPointer.removeFromParent()
                 previousPointer = point
                 pointerPosition = 1
+                currentTool.text = getNameOfCurrentTool()
                 return
             }
             
             if coolingDown == false {
                 if getCurrentTool() == .cement {
-                    if nodeName == "wallArea" || nodeName == "crack" || ((nodeName?.substring(to: nodeName!.index(nodeName!.startIndex, offsetBy: 5))) == "window"){
+                    //                   print(nodeName?.hasPrefix("window"))
+                    if nodeName == "wallArea" || nodeName == "crack"  || (nodeName?.hasPrefix("window"))!{
                         cement = true
                         
                         addChild(cementArea)
@@ -117,10 +130,36 @@ class GameScene: SKScene {
                         cementArea.zPosition = 1
                         cementArea.color = UIColor.red
                         cementArea.alpha = 0.5
-                        cementArea.size.height = 75
-                        cementArea.size.width = 75
+                        cementArea.size.height = 80
+                        cementArea.size.width = 80
+                        
+                        if location.y > 380{
+                            cementArea.position.y = 430
+                        }else{
+                            cementArea.position.y = location.y + 50
+                        }
                         cementArea.position.x = location.x
-                        cementArea.position.y = location.y + 50
+                        
+                    }
+                }else if getCurrentTool() == . tape{
+                    if nodeName == "wallArea" || nodeName == "crack"  || (nodeName?.hasPrefix("window"))!{
+                        tape = true
+                        
+                        addChild(tapeArea)
+                        
+                        tapeArea.zPosition = 1
+                        tapeArea.color = UIColor.red
+                        tapeArea.alpha = 0.5
+                        tapeArea.size.height = 30
+                        tapeArea.size.width = 320
+                        tapeArea.anchorPoint.x = 0
+                        tapeArea.anchorPoint.y = 0
+                        tapeArea.position.x = 0
+                        if location.y > 440 {
+                            tapeArea.position.y = 390
+                        }else{
+                            tapeArea.position.y = location.y + 50
+                        }
                     }
                 }else if nodeName == "crack"{
                     for i in 1 ... 6{
@@ -130,15 +169,16 @@ class GameScene: SKScene {
                             }
                         }
                     }
-                  
+                    
                     if cracks.contains(nodeAtPoint as! Crack){
                         if windowContains == false{
                             removeCrack(nodeAtPoint: nodeAtPoint)
                             
-                            //                      coolDown()
+                            //                           coolDown()
                             removeTool()
                             addRandomTool()
                             displayTools()
+                            currentTool.text = getNameOfCurrentTool()
                         }
                     }
                 }
@@ -147,12 +187,34 @@ class GameScene: SKScene {
     }
     
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
+        let touch = touches.first!
+        let location = touch.location(in: self)
+        
         if cement{
-            let touch = touches.first!
-            let location = touch.location(in: self)
+            if location.x < 40 {
+                cementArea.position.x = 40
+            }else if location.x > 280{
+                cementArea.position.x = 280
+            }else{
+                cementArea.position.x = location.x
+            }
             
-            cementArea.position.x = location.x
-            cementArea.position.y = location.y + 50
+            if location.y > 380{
+                cementArea.position.y = 430
+            }else if location.y < 140{
+                cementArea.position.y = 190
+            }else{
+                cementArea.position.y = location.y + 50
+            }
+        }
+        if tape{
+            if location.y > 390 {
+                tapeArea.position.y = 440
+            }else if location.y < 100{
+                tapeArea.position.y = 150
+            }else{
+                tapeArea.position.y = location.y + 50
+            }
         }
     }
     
@@ -166,9 +228,48 @@ class GameScene: SKScene {
             
             cement = false
             cementArea.removeFromParent()
+            //            coolDown()
             removeTool()
             addRandomTool()
             displayTools()
+            currentTool.text = getNameOfCurrentTool()
+        }
+        
+        if tape{
+            let tapeRoll = rollTape()
+            addChild(tapeRoll)
+            
+            tapeRoll.physicsBody?.categoryBitMask = 2
+            tapeRoll.physicsBody?.contactTestBitMask = 1
+            
+            tapeRoll.name = "tapeRoll"
+            tapeRoll.anchorPoint.x = 0.5
+            tapeRoll.anchorPoint.y = 0.5
+            tapeRoll.zPosition = 3
+            tapeRoll.size.height = 30
+            tapeRoll.size.width = 30
+            tapeRoll.position.x = -30
+            tapeRoll.position.y = tapeArea.position.y + 15
+            
+            tapeRoll.run(SKAction.moveTo(x: 335, duration: 2))
+            
+            tape = false
+            tapeArea.removeFromParent()
+            /*
+             for crack in cracks{
+             if tapeArea.contains(crack.position){
+             removeCrack(nodeAtPoint: crack)
+             }
+             }
+             */
+            
+            //            coolDown()
+            removeTool()
+            addRandomTool()
+            displayTools()
+            currentTool.text = getNameOfCurrentTool()
+            
+            
         }
         
         windowContains = false
@@ -176,15 +277,34 @@ class GameScene: SKScene {
     
     override func update(_ currentTime: TimeInterval) {
         if currentState == .playing {
-            if cracks.count > 98457 {
+            if cracks.count > 45678 {
                 gameOver()
             }
             
             if num >= frequency {
                 addCrack()
+                
                 num = 0
             }else{
                 num += 1
+            }
+        }
+    }
+    
+    func didBegin(_ contact: SKPhysicsContact) {
+        print("skbjksb")
+        /* Physics contact delegate implementation */
+        /* Get references to the bodies involved in the collision */
+        let contactA:SKPhysicsBody = contact.bodyA
+        let contactB:SKPhysicsBody = contact.bodyB
+        /* Get references to the physics body parent SKSpriteNode */
+        let nodeA = contactA.node as! SKSpriteNode
+        let nodeB = contactB.node as! SKSpriteNode
+        
+        if nodeA.name == "crack" || nodeA.name == "tapeRoll"{
+            if nodeB.name == "crack" || nodeB.name == "tapeRoll"{
+                let node = childNode(withName: "crack")
+                removeCrack(nodeAtPoint: node!)
             }
         }
     }
@@ -197,6 +317,7 @@ class GameScene: SKScene {
         
         pointer.xScale = 1.5
         pointer.yScale = 1.5
+        pointer.zPosition = 2
         
         pointer.position.x = 114.4
         pointer.position.y = 138
@@ -208,6 +329,8 @@ class GameScene: SKScene {
         addRandomTool()
         
         displayTools()
+        
+        currentTool.text = getNameOfCurrentTool()
     }
     
     func addCrack() {
@@ -218,6 +341,9 @@ class GameScene: SKScene {
         crack.zPosition = 1
         crack.xScale = 1
         crack.yScale = 1
+        
+        crack.physicsBody?.categoryBitMask = 1
+        crack.physicsBody?.contactTestBitMask = 2
         
         var randPosition: CGPoint = CGPoint(x: 0, y: 0)
         
@@ -237,7 +363,7 @@ class GameScene: SKScene {
         crack.position.y = CGFloat(randPosition.y)
         
         crack.run(SKAction.colorize(with: UIColor.black, colorBlendFactor: 3, duration: 0.1))
-    
+        
         crack.name = "crack"
         cracks.append(crack)
         cracksPositon.append(randPosition)
@@ -285,6 +411,7 @@ class GameScene: SKScene {
             newTool.yScale = 0.5
         }
         
+        newTool.zPosition = 1
         newTool.position.x = toolX[i]
         newTool.position.y = toolY[i]
         
@@ -294,7 +421,7 @@ class GameScene: SKScene {
     
     func addRandomTool() {
         var i = Int(arc4random_uniform(4))
-        i = 0
+        i = 2
         var randTool: tools = .cement
         
         if i == 0 {
@@ -326,6 +453,7 @@ class GameScene: SKScene {
         
         pointer.xScale = 1.5
         pointer.yScale = 1.5
+        pointer.zPosition = 2
         
         pointer.position.x = 114.4
         pointer.position.y = 138
@@ -426,5 +554,59 @@ class GameScene: SKScene {
         let texture = SKTexture(imageNamed: "tape")
         return SKSpriteNode(texture: texture)
     }
-
+    
+    func basicCrack() -> SKSpriteNode {
+        let texture = SKTexture(imageNamed: "cracks")
+        return SKSpriteNode(texture: texture)
+    }
+    
+    func rollTape() -> SKSpriteNode {
+        let texture = SKTexture(imageNamed: "tapeRoll")
+        return SKSpriteNode(texture: texture)
+    }
+    
+    func getNameOfCurrentTool() -> String{
+        let tool = getCurrentTool()
+        
+        var name = ""
+        
+        switch tool {
+        case .cement:
+            name = "cement"
+        case .glue:
+            name = "glue"
+        case .tape:
+            name = "tape"
+        case .wood:
+            name = "wood"
+        }
+        
+        return name
+    }
+    
+    func openWindow() {
+        let num = Int(arc4random_uniform(6))
+        
+        let texture = SKTexture(imageNamed: "openWindow")
+        let window = SKSpriteNode(texture: texture)
+        
+        addChild(window)
+        
+        window.zPosition = 2
+        window.size.width = 80
+        window.size.height = 80
+        
+        window.position.x = openWindowX[num]
+        window.position.y = openWindowY[num]
+    }
+    
+    func waitForTape(node: SKSpriteNode) {
+        print(0)
+        for crack in cracks{
+            if node.contains(crack.position){
+                removeCrack(nodeAtPoint: crack)
+            }
+        }
+        print(1)
+    }
 }

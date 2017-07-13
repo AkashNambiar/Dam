@@ -13,13 +13,15 @@
 
 import SpriteKit
 
-var playButton: MSButtonNode!
-
 class MainMenu: SKScene {
+    
+    var playButton: MSButtonNode!
+    var instructionsButton: MSButtonNode!
     
     override func didMove(to view: SKView) {
         
         playButton = childNode(withName: "//playButton") as! MSButtonNode
+        instructionsButton = childNode(withName: "//instructionsButton") as! MSButtonNode
         
         playButton.selectedHandler = {
             guard let skView = self.view as SKView! else{
@@ -28,6 +30,20 @@ class MainMenu: SKScene {
             }
             
             guard let scene = GameScene(fileNamed: "GameScene") else {
+                return
+            }
+            scene.scaleMode = .aspectFit
+            
+            skView.presentScene(scene)
+        }
+        
+        instructionsButton.selectedHandler = {
+            guard let skView = self.view as SKView! else{
+                print("Could not get Skview")
+                return
+            }
+            
+            guard let scene = GameScene(fileNamed: "instructionsMenu") else {
                 return
             }
             scene.scaleMode = .aspectFit

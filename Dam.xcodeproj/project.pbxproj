@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		380767B41F16BDAE00E6927F /* instructionsMenu.sks in Resources */ = {isa = PBXBuildFile; fileRef = 380767B31F16BDAD00E6927F /* instructionsMenu.sks */; };
+		381EC98F1F16D6370056C4CE /* instructionsMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 381EC98E1F16D6370056C4CE /* instructionsMenu.swift */; };
 		38449D7E1F141B3C002EFB00 /* MainMenu.sks in Resources */ = {isa = PBXBuildFile; fileRef = 38449D7D1F141B3C002EFB00 /* MainMenu.sks */; };
 		38449D801F141B53002EFB00 /* MainMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38449D7F1F141B53002EFB00 /* MainMenu.swift */; };
 		38449D821F141C28002EFB00 /* MSButtonNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38449D811F141C28002EFB00 /* MSButtonNode.swift */; };
@@ -46,6 +47,7 @@
 
 /* Begin PBXFileReference section */
 		380767B31F16BDAD00E6927F /* instructionsMenu.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = instructionsMenu.sks; sourceTree = "<group>"; };
+		381EC98E1F16D6370056C4CE /* instructionsMenu.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = instructionsMenu.swift; sourceTree = "<group>"; };
 		38449D7D1F141B3C002EFB00 /* MainMenu.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = MainMenu.sks; sourceTree = "<group>"; };
 		38449D7F1F141B53002EFB00 /* MainMenu.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MainMenu.swift; sourceTree = "<group>"; };
 		38449D811F141C28002EFB00 /* MSButtonNode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MSButtonNode.swift; sourceTree = "<group>"; };
@@ -135,6 +137,7 @@
 				3893B6B41F13DB4100C7DBF2 /* GameScene.sks */,
 				38449D7D1F141B3C002EFB00 /* MainMenu.sks */,
 				38449D7F1F141B53002EFB00 /* MainMenu.swift */,
+				381EC98E1F16D6370056C4CE /* instructionsMenu.swift */,
 				380767B31F16BDAD00E6927F /* instructionsMenu.sks */,
 				3893B6B81F13DB4100C7DBF2 /* GameScene.swift */,
 				38449D811F141C28002EFB00 /* MSButtonNode.swift */,
@@ -305,6 +308,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				384C49AF1F14264500FBAAA8 /* point.swift in Sources */,
+				381EC98F1F16D6370056C4CE /* instructionsMenu.swift in Sources */,
 				38449D801F141B53002EFB00 /* MainMenu.swift in Sources */,
 				3893B6B91F13DB4100C7DBF2 /* GameScene.swift in Sources */,
 				384C49B61F1440FD00FBAAA8 /* Cement.swift in Sources */,
