@@ -17,7 +17,7 @@ enum playingState{
     case playing, notPlaying
 }
 
-class GameScene: SKScene, SKPhysicsContactDelegate {
+class GameScene: SKScene {
     
     var currentState: playingState = .playing
     
@@ -62,8 +62,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     override func didMove(to view: SKView) {
-        
-        physicsWorld.contactDelegate = self
         
         scoreLabel = childNode(withName: "score") as! SKLabelNode
         trashButton = childNode(withName: "trashButton") as! MSButtonNode
@@ -138,8 +136,14 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                         }else{
                             cementArea.position.y = location.y + 50
                         }
-                        cementArea.position.x = location.x
-                        
+                       
+                        if location.x < 40 {
+                            cementArea.position.x = 40
+                        }else if location.x > 280{
+                            cementArea.position.x = 280
+                        }else{
+                            cementArea.position.x = location.x
+                        }
                     }
                 }else if getCurrentTool() == . tape{
                     if nodeName == "wallArea" || nodeName == "crack"  || (nodeName?.hasPrefix("window"))!{
@@ -155,8 +159,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                         tapeArea.anchorPoint.x = 0
                         tapeArea.anchorPoint.y = 0
                         tapeArea.position.x = 0
-                        if location.y > 440 {
-                            tapeArea.position.y = 390
+                        if location.y > 390 {
+                            tapeArea.position.y = 440
                         }else{
                             tapeArea.position.y = location.y + 50
                         }
@@ -239,9 +243,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             let tapeRoll = rollTape()
             addChild(tapeRoll)
             
-            tapeRoll.physicsBody?.categoryBitMask = 2
-            tapeRoll.physicsBody?.contactTestBitMask = 1
-            
             tapeRoll.name = "tapeRoll"
             tapeRoll.anchorPoint.x = 0.5
             tapeRoll.anchorPoint.y = 0.5
@@ -291,24 +292,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
     }
     
-    func didBegin(_ contact: SKPhysicsContact) {
-        print("skbjksb")
-        /* Physics contact delegate implementation */
-        /* Get references to the bodies involved in the collision */
-        let contactA:SKPhysicsBody = contact.bodyA
-        let contactB:SKPhysicsBody = contact.bodyB
-        /* Get references to the physics body parent SKSpriteNode */
-        let nodeA = contactA.node as! SKSpriteNode
-        let nodeB = contactB.node as! SKSpriteNode
-        
-        if nodeA.name == "crack" || nodeA.name == "tapeRoll"{
-            if nodeB.name == "crack" || nodeB.name == "tapeRoll"{
-                let node = childNode(withName: "crack")
-                removeCrack(nodeAtPoint: node!)
-            }
-        }
-    }
-    
     func beginFunc() {
         returnButton.isHidden = true
         
@@ -341,9 +324,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         crack.zPosition = 1
         crack.xScale = 1
         crack.yScale = 1
-        
-        crack.physicsBody?.categoryBitMask = 1
-        crack.physicsBody?.contactTestBitMask = 2
         
         var randPosition: CGPoint = CGPoint(x: 0, y: 0)
         
