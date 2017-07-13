@@ -33,6 +33,10 @@ class GameScene: SKScene {
     var num = 0
     var frequency = 140
     
+    var nodeAboveTouch: CGFloat = 10
+    var gameTop: CGFloat = 470
+    var gameBottom: CGFloat = 150
+    
     let cementArea: SKSpriteNode = SKSpriteNode()
     let tapeArea: SKSpriteNode = SKSpriteNode()
     var cement = false
@@ -130,13 +134,15 @@ class GameScene: SKScene {
                         cementArea.alpha = 0.5
                         cementArea.size.height = 80
                         cementArea.size.width = 80
+//                        cementArea.anchorPoint.x = 0
+//                        cementArea.anchorPoint.y = 0
                         
                         if location.y > 380{
                             cementArea.position.y = 430
                         }else{
                             cementArea.position.y = location.y + 50
                         }
-                       
+                        
                         if location.x < 40 {
                             cementArea.position.x = 40
                         }else if location.x > 280{
@@ -159,10 +165,10 @@ class GameScene: SKScene {
                         tapeArea.anchorPoint.x = 0
                         tapeArea.anchorPoint.y = 0
                         tapeArea.position.x = 0
-                        if location.y > 390 {
-                            tapeArea.position.y = 440
+                        if location.y > (gameTop - tapeArea.size.height) - nodeAboveTouch{
+                            tapeArea.position.y = gameTop - tapeArea.size.height
                         }else{
-                            tapeArea.position.y = location.y + 50
+                            tapeArea.position.y = location.y + nodeAboveTouch
                         }
                     }
                 }else if nodeName == "crack"{
@@ -178,7 +184,7 @@ class GameScene: SKScene {
                         if windowContains == false{
                             removeCrack(nodeAtPoint: nodeAtPoint)
                             
-                            //                           coolDown()
+                            coolDown()
                             removeTool()
                             addRandomTool()
                             displayTools()
@@ -212,12 +218,13 @@ class GameScene: SKScene {
             }
         }
         if tape{
-            if location.y > 390 {
-                tapeArea.position.y = 440
-            }else if location.y < 100{
-                tapeArea.position.y = 150
+            if location.y > (gameTop - tapeArea.size.height) - nodeAboveTouch{
+                tapeArea.position.y = gameTop - tapeArea.size.height
             }else{
-                tapeArea.position.y = location.y + 50
+                tapeArea.position.y = location.y + nodeAboveTouch
+            }
+         if location.y < gameBottom - nodeAboveTouch{
+                tapeArea.position.y = gameBottom
             }
         }
     }
@@ -232,7 +239,7 @@ class GameScene: SKScene {
             
             cement = false
             cementArea.removeFromParent()
-            //            coolDown()
+            coolDown()
             removeTool()
             addRandomTool()
             displayTools()
@@ -252,19 +259,19 @@ class GameScene: SKScene {
             tapeRoll.position.x = -30
             tapeRoll.position.y = tapeArea.position.y + 15
             
-            tapeRoll.run(SKAction.moveTo(x: 335, duration: 2))
+            tapeRoll.run(SKAction.moveTo(x: 335, duration: 0.5))
             
             tape = false
             tapeArea.removeFromParent()
-            /*
-             for crack in cracks{
-             if tapeArea.contains(crack.position){
-             removeCrack(nodeAtPoint: crack)
-             }
-             }
-             */
             
-            //            coolDown()
+            for crack in cracks{
+                if tapeArea.contains(crack.position){
+                    removeCrack(nodeAtPoint: crack)
+                }
+            }
+            
+            
+            coolDown()
             removeTool()
             addRandomTool()
             displayTools()
@@ -452,13 +459,13 @@ class GameScene: SKScene {
         
         switch currentTool {
         case .cement:
-            duration = 3
+            duration = 1.5
         case .glue:
-            duration = 2
+            duration = 1
         case .tape:
-            duration = 1
+            duration = 0.5
         case .wood:
-            duration = 1
+            duration = 0.5
         }
         
         return duration
