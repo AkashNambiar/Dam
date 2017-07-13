@@ -36,6 +36,8 @@ class GameScene: SKScene {
     var nodeAboveTouch: CGFloat = 10
     var gameTop: CGFloat = 470
     var gameBottom: CGFloat = 150
+    var gameRight: CGFloat = 320
+    var gameLeft: CGFloat = 0
     
     let cementArea: SKSpriteNode = SKSpriteNode()
     let tapeArea: SKSpriteNode = SKSpriteNode()
@@ -121,6 +123,8 @@ class GameScene: SKScene {
                 return
             }
             
+            
+            
             if coolingDown == false {
                 if getCurrentTool() == .cement {
                     //                   print(nodeName?.hasPrefix("window"))
@@ -134,21 +138,21 @@ class GameScene: SKScene {
                         cementArea.alpha = 0.5
                         cementArea.size.height = 80
                         cementArea.size.width = 80
-//                        cementArea.anchorPoint.x = 0
-//                        cementArea.anchorPoint.y = 0
+                        cementArea.anchorPoint.x = 0
+                        cementArea.anchorPoint.y = 0
                         
-                        if location.y > 380{
-                            cementArea.position.y = 430
+                        if location.y > (gameTop - cementArea.size.height) - nodeAboveTouch{
+                            cementArea.position.y = gameTop - cementArea.size.height
                         }else{
-                            cementArea.position.y = location.y + 50
+                            cementArea.position.y = location.y + nodeAboveTouch
                         }
                         
-                        if location.x < 40 {
-                            cementArea.position.x = 40
-                        }else if location.x > 280{
-                            cementArea.position.x = 280
+                        if location.x < gameLeft + (cementArea.size.width/2) {
+                            cementArea.position.x = gameLeft
+                        }else if location.x > gameRight - (cementArea.size.width/2){
+                            cementArea.position.x = gameRight - cementArea.size.width
                         }else{
-                            cementArea.position.x = location.x
+                            cementArea.position.x = location.x - (cementArea.size.width/2)
                         }
                     }
                 }else if getCurrentTool() == . tape{
@@ -192,6 +196,10 @@ class GameScene: SKScene {
                         }
                     }
                 }
+            }else{
+                if location.y > gameBottom && location.y < gameTop{
+                    print("COOL DOWN")
+                }
             }
         }
     }
@@ -201,30 +209,30 @@ class GameScene: SKScene {
         let location = touch.location(in: self)
         
         if cement{
-            if location.x < 40 {
-                cementArea.position.x = 40
-            }else if location.x > 280{
-                cementArea.position.x = 280
+            if location.x < gameLeft + (cementArea.size.width/2) {
+                cementArea.position.x = gameLeft
+            }else if location.x > gameRight - (cementArea.size.width/2){
+                cementArea.position.x = gameRight - cementArea.size.width
             }else{
-                cementArea.position.x = location.x
+                cementArea.position.x = location.x - (cementArea.size.width/2)
             }
             
-            if location.y > 380{
-                cementArea.position.y = 430
-            }else if location.y < 140{
-                cementArea.position.y = 190
+            if location.y > (gameTop - cementArea.size.height) - nodeAboveTouch{
+                cementArea.position.y = gameTop - cementArea.size.height
+            }else if location.y < gameBottom - nodeAboveTouch{
+                cementArea.position.y = gameBottom
             }else{
-                cementArea.position.y = location.y + 50
+                cementArea.position.y = location.y + nodeAboveTouch
             }
+            
         }
         if tape{
             if location.y > (gameTop - tapeArea.size.height) - nodeAboveTouch{
                 tapeArea.position.y = gameTop - tapeArea.size.height
+            }else if location.y < gameBottom - nodeAboveTouch{
+                tapeArea.position.y = gameBottom
             }else{
                 tapeArea.position.y = location.y + nodeAboveTouch
-            }
-         if location.y < gameBottom - nodeAboveTouch{
-                tapeArea.position.y = gameBottom
             }
         }
     }
@@ -408,7 +416,7 @@ class GameScene: SKScene {
     
     func addRandomTool() {
         var i = Int(arc4random_uniform(4))
-        i = 2
+        i = 0
         var randTool: tools = .cement
         
         if i == 0 {
