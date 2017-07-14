@@ -12,10 +12,7 @@
 		38449D7E1F141B3C002EFB00 /* MainMenu.sks in Resources */ = {isa = PBXBuildFile; fileRef = 38449D7D1F141B3C002EFB00 /* MainMenu.sks */; };
 		38449D801F141B53002EFB00 /* MainMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38449D7F1F141B53002EFB00 /* MainMenu.swift */; };
 		38449D821F141C28002EFB00 /* MSButtonNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38449D811F141C28002EFB00 /* MSButtonNode.swift */; };
-		384C49AF1F14264500FBAAA8 /* point.swift in Sources */ = {isa = PBXBuildFile; fileRef = 384C49AE1F14264500FBAAA8 /* point.swift */; };
-		384C49B11F14302800FBAAA8 /* Tape.swift in Sources */ = {isa = PBXBuildFile; fileRef = 384C49B01F14302800FBAAA8 /* Tape.swift */; };
-		384C49B31F14303100FBAAA8 /* Glue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 384C49B21F14303100FBAAA8 /* Glue.swift */; };
-		384C49B61F1440FD00FBAAA8 /* Cement.swift in Sources */ = {isa = PBXBuildFile; fileRef = 384C49B51F1440FD00FBAAA8 /* Cement.swift */; };
+		3891FCE11F19254600B84DF4 /* Window.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3891FCE01F19254600B84DF4 /* Window.swift */; };
 		3893B6B31F13DB4100C7DBF2 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3893B6B21F13DB4100C7DBF2 /* AppDelegate.swift */; };
 		3893B6B51F13DB4100C7DBF2 /* GameScene.sks in Resources */ = {isa = PBXBuildFile; fileRef = 3893B6B41F13DB4100C7DBF2 /* GameScene.sks */; };
 		3893B6B91F13DB4100C7DBF2 /* GameScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3893B6B81F13DB4100C7DBF2 /* GameScene.swift */; };
@@ -51,10 +48,7 @@
 		38449D7D1F141B3C002EFB00 /* MainMenu.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = MainMenu.sks; sourceTree = "<group>"; };
 		38449D7F1F141B53002EFB00 /* MainMenu.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MainMenu.swift; sourceTree = "<group>"; };
 		38449D811F141C28002EFB00 /* MSButtonNode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MSButtonNode.swift; sourceTree = "<group>"; };
-		384C49AE1F14264500FBAAA8 /* point.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = point.swift; sourceTree = "<group>"; };
-		384C49B01F14302800FBAAA8 /* Tape.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Tape.swift; sourceTree = "<group>"; };
-		384C49B21F14303100FBAAA8 /* Glue.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Glue.swift; sourceTree = "<group>"; };
-		384C49B51F1440FD00FBAAA8 /* Cement.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Cement.swift; sourceTree = "<group>"; };
+		3891FCE01F19254600B84DF4 /* Window.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Window.swift; sourceTree = "<group>"; };
 		3893B6AF1F13DB4100C7DBF2 /* Dam.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Dam.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3893B6B21F13DB4100C7DBF2 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		3893B6B41F13DB4100C7DBF2 /* GameScene.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = GameScene.sks; sourceTree = "<group>"; };
@@ -101,11 +95,8 @@
 		384C49B41F14326100FBAAA8 /* SKNodes */ = {
 			isa = PBXGroup;
 			children = (
-				384C49B01F14302800FBAAA8 /* Tape.swift */,
-				384C49B21F14303100FBAAA8 /* Glue.swift */,
-				384C49AE1F14264500FBAAA8 /* point.swift */,
 				3893B6E61F13E0D200C7DBF2 /* Crack.swift */,
-				384C49B51F1440FD00FBAAA8 /* Cement.swift */,
+				3891FCE01F19254600B84DF4 /* Window.swift */,
 			);
 			name = SKNodes;
 			sourceTree = "<group>";
@@ -307,17 +298,14 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				384C49AF1F14264500FBAAA8 /* point.swift in Sources */,
 				381EC98F1F16D6370056C4CE /* instructionsMenu.swift in Sources */,
 				38449D801F141B53002EFB00 /* MainMenu.swift in Sources */,
 				3893B6B91F13DB4100C7DBF2 /* GameScene.swift in Sources */,
-				384C49B61F1440FD00FBAAA8 /* Cement.swift in Sources */,
-				384C49B31F14303100FBAAA8 /* Glue.swift in Sources */,
 				3893B6BB1F13DB4100C7DBF2 /* GameViewController.swift in Sources */,
 				38449D821F141C28002EFB00 /* MSButtonNode.swift in Sources */,
 				3893B6E71F13E0D200C7DBF2 /* Crack.swift in Sources */,
 				3893B6B31F13DB4100C7DBF2 /* AppDelegate.swift in Sources */,
-				384C49B11F14302800FBAAA8 /* Tape.swift in Sources */,
+				3891FCE11F19254600B84DF4 /* Window.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
