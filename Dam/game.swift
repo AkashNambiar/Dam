@@ -4,12 +4,13 @@
 //
 //  Created by Akash Nambiar on 7/10/17.
 //  Copyright © 2017 Akash Nambiar. All rights reserved.
+//
 //https://opengameart.org/content/64x-textures-an-overlays
 
 import SpriteKit
 import Foundation
 
-class game: SKScene {
+class game: SKScene, SKPhysicsContactDelegate {
     
     enum tools {
         case glue, cement, tape, wood, lock
@@ -56,6 +57,7 @@ class game: SKScene {
     var pointerPosition = 0
     var previousPointer: SKNode!
     
+    //var firstCrack: Crack!
     var cracks: [Crack] = []
     var cracksPositon: [CGPoint] = []
     
@@ -89,6 +91,8 @@ class game: SKScene {
                 self.currentTool.text = self.getNameOfCurrentTool()
             }
         }
+        
+        physicsWorld.contactDelegate = self
         
         beginFunc()
     }
@@ -130,7 +134,7 @@ class game: SKScene {
                             }
                         }
                         print(index)
-                
+                        
                         let window = childNode(withName: "openWindow\(index)")
                         let man = childNode(withName: "oldMan\(index)")
                         
@@ -225,6 +229,7 @@ class game: SKScene {
                         coolDownLabel.text = "COOLING DOWN"
                         coolDownLabel.fontName = "Didot Bold"
                         coolDownLabel.fontSize = 36
+                        coolDownLabel.color = UIColor.red
                         coolDownLabel.alpha = 0.6
                         
                         coolDownLabel.name = "coolDown"
@@ -331,17 +336,51 @@ class game: SKScene {
             }
             
             if currentState == .playing {
-                if cracks.count > 5 {
+                
+                for crack in cracks{
+                    let end = NSDate()
+                    let time: Double = end.timeIntervalSince(crack.start as Date)
                     
+                    if time > 3{
+                        dropBrick(node: crack)
+                        removeCrack(nodeAtPoint: crack)
+                    }
                 }
                 
                 if num >= frequency {
-                    openWindow()
+                    if other > 5{
+                        openWindow()
+                    }else{
+                        addCrack()
+                    }
+                    
                     num = 0
                 }else{
                     num += 1
                 }
             }
+        }
+    }
+    
+    func didBegin(_ contact: SKPhysicsContact) {
+        let contactA:SKPhysicsBody = contact.bodyA
+        let contactB:SKPhysicsBody = contact.bodyB
+        
+        let nodeA = contactA.node as! SKSpriteNode
+        let nodeB = contactB.node as! SKSpriteNode
+        
+        print(nodeA.name)
+        print(nodeB.name)
+        
+        if (nodeA.name == "singleBrick" && nodeB.name == "man")  || (nodeB.name == "singleBrick" && nodeA.name == "man"){
+            if nodeA.name == "singleBrick"{
+                nodeA.removeFromParent()
+                addText(node: nodeB)
+            }else{
+                nodeB.removeFromParent()
+                addText(node: nodeA)
+            }
+            
         }
     }
     
@@ -351,7 +390,6 @@ class game: SKScene {
         
         addRandomTool()
         addRandomTool()
-        //        addRandomTool()
         
         displayTools()
         
@@ -462,7 +500,6 @@ class game: SKScene {
     
     func addRandomTool() {
         var i = Int(arc4random_uniform(5))
-        i = 4
         var randTool: tools = .cement
         
         if i == 0 {
@@ -674,4 +711,48 @@ class game: SKScene {
     func movePeople() {
         
     }
+    
+    func dropBrick(node: SKSpriteNode) {
+        let texture = SKTexture(imageNamed: "singleBrick")
+        let brick = SKSpriteNode(texture: texture)
+        
+        addChild(brick)
+        
+        brick.name = "singleBrick"
+        brick.position = node.position
+        brick.zPosition = 2
+        brick.xScale = 3
+        brick.yScale = 3
+        
+        let rand = arc4random_uniform(180)
+        brick.zRotation = CGFloat(rand)
+        
+        brick.physicsBody = SKPhysicsBody(rectangleOf: brick.size)
+        brick.physicsBody?.affectedByGravity = true
+        brick.physicsBody?.contactTestBitMask = 4294967295
+    }
+    
+    func addText(node: SKSpriteNode) {
+        let text: SKLabelNode = SKLabelNode()
+        
+        addChild(text)
+        
+        text.text = "OW"
+        text.fontName = "Georgia"
+        text.fontSize = 18
+        
+        text.position.x = node.position.x
+        text.position.y = node.position.y + 20
+        text.zPosition = 3
+        
+        let wait = SKAction.wait(forDuration: 3)
+        let code = SKAction.run {
+            text.removeFromParent()
+        }
+        
+        text.run(
+            SKAction.sequence([wait,code])
+        )
+    }
+    
 }

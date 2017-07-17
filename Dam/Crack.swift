@@ -10,13 +10,15 @@ import SpriteKit
 
 class Crack: SKSpriteNode {
     
+    let start = NSDate()
+    
     init() {
         // Make a texture from an image, a color, and size
         let texture = SKTexture(imageNamed: "cracks")
         let color = UIColor.clear
         let size = texture.size()
         
-        // Call the designated initializer
+              // Call the designated initializer
         super.init(texture: texture, color: color, size: size)
         
     }
