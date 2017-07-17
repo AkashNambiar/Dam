@@ -29,7 +29,7 @@ class MainMenu: SKScene {
                 return
             }
             
-            guard let scene = GameScene(fileNamed: "GameScene") else {
+            guard let scene = GameScene(fileNamed: "buildingScene") else {
                 return
             }
             scene.scaleMode = .aspectFit

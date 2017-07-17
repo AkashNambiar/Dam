@@ -4,43 +4,47 @@
 //
 //  Created by Akash Nambiar on 7/10/17.
 //  Copyright © 2017 Akash Nambiar. All rights reserved.
-//  var openWindowX: [CGFloat] = [75, 245, 75, 245, 75, 245]
-//var openWindowY: [CGFloat] = [415, 415, 310, 310, 205, 205]
+//https://opengameart.org/content/64x-textures-an-overlays
 
 import SpriteKit
 import Foundation
 
-enum tools {
-    case glue, cement, tape, wood, lock
-}
-
-enum playingState{
-    case playing, notPlaying, tutorial
-}
-
-class GameScene: SKScene {
+class game: SKScene {
+    
+    enum tools {
+        case glue, cement, tape, wood, lock
+    }
+    
+    enum playingState{
+        case playing, notPlaying, tutorial
+    }
+    
+    var scoreLabel: SKLabelNode!
+    var trashButton: MSButtonNode!
+    var waitBar: SKSpriteNode!
+    var currentTool: SKLabelNode!
+    var b1: SKSpriteNode!
+    var b2: SKSpriteNode!
     
     var currentState: playingState = .playing
     
     var toolList: [tools] = []
     var toolPics: [SKSpriteNode] = []
     var specialTool: tools!
-    
-    var toolX: [CGFloat] = [115, 206, 282, 38]
-    var toolY: [CGFloat] = [100, 100, 44, 44]
-    var openWindowX: [CGFloat] = [83, 243, 83, 243, 83, 243]
-    var openWindowY: [CGFloat] = [405, 405, 300, 300, 195, 195]
+
+    var openWindowX: [CGFloat] = [75, 245, 75, 245, 75, 245]
+    var openWindowY: [CGFloat] = [415, 415, 310, 310, 205, 205]
     
     var num = 0
     var other = 0
-    var frequency = 100
+    var frequency = 150
     var offTheWall: CGFloat = 2.5
     
     var nodeAboveTouch: CGFloat = 0
     var halfCementSize: CGFloat = 0
     var halfTapeSize: CGFloat = 0
-    var gameTop: CGFloat = 470
-    var gameBottom: CGFloat = 150
+    var gameTop: CGFloat = 485
+    var gameBottom: CGFloat = 155
     var gameRight: CGFloat = 320
     var gameLeft: CGFloat = 0
     
@@ -63,14 +67,6 @@ class GameScene: SKScene {
     var windows: [Window] = []
     var windowsPosition: [Int] = []
     
-    var scoreLabel: SKLabelNode!
-    var trashButton: MSButtonNode!
-    var waitBar: SKSpriteNode!
-    var returnButton: MSButtonNode!
-    var specialButton: MSButtonNode!
-    var currentTool: SKLabelNode!
-    var ret: MSButtonNode!
-    
     var Score: Int = 0 {
         didSet {
             scoreLabel.text = String(Score)
@@ -78,14 +74,12 @@ class GameScene: SKScene {
     }
     
     override func didMove(to view: SKView) {
-        
         scoreLabel = childNode(withName: "score") as! SKLabelNode
         trashButton = childNode(withName: "trashButton") as! MSButtonNode
         waitBar = childNode(withName: "waitBar") as! SKSpriteNode
-        returnButton = childNode(withName: "//returnButton") as! MSButtonNode
-        specialButton = childNode(withName: "specialButton") as! MSButtonNode
         currentTool = childNode(withName: "currentTool") as! SKLabelNode
-        ret = childNode(withName: "//ret") as! MSButtonNode
+        b1 = childNode(withName: "b1") as! SKSpriteNode
+        b2 = childNode(withName: "b2") as! SKSpriteNode
         
         trashButton.selectedHandler = {
             if self.currentState == .playing{
@@ -94,24 +88,6 @@ class GameScene: SKScene {
                 self.displayTools()
                 self.currentTool.text = self.getNameOfCurrentTool()
             }
-        }
-        
-        specialButton.selectedHandler = {
-            let tool = self.getCurrentTool()
-            self.specialTool = tool
-            self.removeTool()
-            self.addRandomTool()
-            self.displayTools()
-            self.displayTool(tool: tool, i: 3)
-        }
-        
-        ret.selectedHandler = {
-            let skView = self.view as SKView!
-            
-            guard let scene = GameScene(fileNamed:"MainMenu") as GameScene! else { return }
-            
-            scene.scaleMode = .aspectFill
-            skView?.presentScene(scene)
         }
         
         beginFunc()
@@ -125,8 +101,7 @@ class GameScene: SKScene {
             let nodeName = nodeAtPoint.name
             
             if nodeName == "box1" {
-                let point = addPointer()
-                point.position.x = 114.4
+                let point = addPointer(box: b1)
                 previousPointer.removeFromParent()
                 previousPointer = point
                 pointerPosition = 0
@@ -135,8 +110,7 @@ class GameScene: SKScene {
             }
             
             if nodeName == "box2" {
-                let point = addPointer()
-                point.position.x = 205.6
+                let point = addPointer(box: b2)
                 previousPointer.removeFromParent()
                 previousPointer = point
                 pointerPosition = 1
@@ -219,14 +193,6 @@ class GameScene: SKScene {
                         }
                     }
                 }else if nodeName == "crack"{
-                    /*                    for i in 1 ... 6{
-                     if (childNode(withName: "window\(i)")?.contains(nodeAtPoint.position))!{
-                     if getCurrentTool() != .wood{
-                     windowContains = true
-                     }
-                     }
-                     }
-                     */
                     if cracks.contains(nodeAtPoint as! Crack){
                         if windowContains == false{
                             removeCrack(nodeAtPoint: nodeAtPoint)
@@ -355,18 +321,11 @@ class GameScene: SKScene {
             
             if currentState == .playing {
                 if cracks.count > 5 {
-                    gameOver()
+                
                 }
                 
                 if num >= frequency {
-                    if other > 4{
-                        openWindow()
-                        other = 0
-                    }else{
-//                        openWindow()
-                        addCrack()
-                        other += 1
-                    }
+                    addCrack()
                     num = 0
                 }else{
                     num += 1
@@ -376,23 +335,12 @@ class GameScene: SKScene {
     }
     
     func beginFunc() {
-        returnButton.isHidden = true
-        
-        let pointer = point()
-        addChild(pointer)
-        
-        pointer.xScale = 1.5
-        pointer.yScale = 1.5
-        pointer.zPosition = 2
-        
-        pointer.position.x = 114.4
-        pointer.position.y = 138
-        
+        let pointer = addPointer(box: b1)
         previousPointer = pointer
         
         addRandomTool()
         addRandomTool()
-        addRandomTool()
+//        addRandomTool()
         
         displayTools()
         
@@ -413,7 +361,7 @@ class GameScene: SKScene {
         
         var randPosition = randCrackPosition(crack: crack)
         
-        while randPosition.x == 1000 || randPosition.y == 100 {
+        while randPosition.x == 1000 || randPosition.y == 1000 {
             randPosition = randCrackPosition(crack: crack)
         }
         
@@ -468,7 +416,7 @@ class GameScene: SKScene {
     }
     
     func displayTools() {
-        for i in 0 ... 2 {
+        for i in 0 ... 1 {
             let tool = toolList[i]
             displayTool(tool: tool, i: i)
         }
@@ -476,32 +424,28 @@ class GameScene: SKScene {
     
     func displayTool(tool: tools, i: Int) {
         var newTool: SKSpriteNode = glueTool()
+        let box: SKSpriteNode = childNode(withName: "b\(i+1)") as! SKSpriteNode
+        
+        let position = box.position
+        let size = box.size
+        
+        print(position)
         
         if tool == .glue{
             newTool = glueTool()
-            newTool.xScale = 0.8
-            newTool.yScale = 0.8
         }else if tool == .tape{
             newTool = tapeTool()
-            newTool.xScale = 2.5
-            newTool.yScale = 2.5
         }else if tool == .cement{
             newTool = cementTool()
-            newTool.size.height = 40
-            newTool.size.width = 40
         }else if tool == .wood{
             newTool = woodTool()
-            newTool.xScale = 0.5
-            newTool.yScale = 0.5
         }else if tool == .lock{
             newTool = lockTool()
-            newTool.size.height = 40
-            newTool.size.width = 40
         }
         
+        newTool.size = size
         newTool.zPosition = 1
-        newTool.position.x = toolX[i]
-        newTool.position.y = toolY[i]
+        newTool.position = position
         
         addChild(newTool)
         toolPics.append(newTool)
@@ -535,18 +479,22 @@ class GameScene: SKScene {
         toolPics.removeAll()
     }
     
-    func addPointer() -> SKNode{
-        previousPointer.removeFromParent()
+    func addPointer(box: SKSpriteNode) -> SKNode{
         
         let pointer = point()
         addChild(pointer)
+        
+        let x = box.position.x
+        let y = box.position.y
+        
+        print("\(x)     \(y)")
         
         pointer.xScale = 1.5
         pointer.yScale = 1.5
         pointer.zPosition = 2
         
-        pointer.position.x = 114.4
-        pointer.position.y = 138
+        pointer.position.x = x
+        pointer.position.y = y + 20
         
         return pointer
     }
@@ -585,14 +533,12 @@ class GameScene: SKScene {
         let change = SKAction.run(changeWaitingState)
         
         waitBar.run(
-            SKAction.sequence([scaleHeightAction,  change])
+            SKAction.sequence([scaleHeightAction, change])
         )
     }
     
     func gameOver() {
         currentState = .notPlaying
-        
-        returnButton.isHidden = false
         
         let texture = SKTexture(imageNamed: "gameOver")
         let gameOverLabel = SKSpriteNode(texture: texture)
@@ -611,15 +557,6 @@ class GameScene: SKScene {
         
         for tool in toolPics {
             tool.run(SKAction.colorize(with: UIColor.red, colorBlendFactor: 2, duration: 3))
-        }
-        
-        returnButton.selectedHandler = {
-            let skView = self.view as SKView!
-            
-            guard let scene = GameScene(fileNamed:"MainMenu") as GameScene! else { return }
-            
-            scene.scaleMode = .aspectFill
-            skView?.presentScene(scene)
         }
     }
     
@@ -708,8 +645,8 @@ class GameScene: SKScene {
         
         window.name = "openWindow"
         window.zPosition = 2
-        window.size.width = 70
-        window.size.height = 70
+        window.size.width = 60
+        window.size.height = 60
         
         man.name = "oldMan\(num)"
         man.zPosition = 3
@@ -718,13 +655,13 @@ class GameScene: SKScene {
         
         window.position.x = openWindowX[num]
         window.position.y = openWindowY[num]
-        man.position.x = openWindowX[num] - 5
+        man.position.x = openWindowX[num] 
         man.position.y = openWindowY[num] - 5
         
         windows.append(window)
         windowsPosition.append(num)
         
-        Score += 3
+//        Score += 3
     }
     
     func waitForTape(node: SKSpriteNode) {
