@@ -31,7 +31,7 @@ class game: SKScene {
     var toolList: [tools] = []
     var toolPics: [SKSpriteNode] = []
     var specialTool: tools!
-
+    
     var openWindowX: [CGFloat] = [75, 245, 75, 245, 75, 245]
     var openWindowY: [CGFloat] = [415, 415, 310, 310, 205, 205]
     
@@ -122,14 +122,21 @@ class game: SKScene {
                 
                 if getCurrentTool() == .lock{
                     if nodeName == "openWindow" || (nodeName?.hasPrefix("oldMan"))!{
-                        let window = childNode(withName: "openWindow")
+                        var index = 0
                         
-                        let index = windows.index(of: window as! Window)
+                        for i in 1...6{
+                            if (childNode(withName: "noCracks\(i)")?.contains(location))!{
+                                index = i - 1
+                            }
+                        }
+                        print(index)
+                
+                        let window = childNode(withName: "openWindow\(index)")
+                        let man = childNode(withName: "oldMan\(index)")
                         
-                        let man = childNode(withName: "oldMan\(windowsPosition[index!])")
-                        
-                        windows.remove(at: index!)
-                        windowsPosition.remove(at: index!)
+                        let i = windowsPosition.index(of: index)
+                        windows.remove(at: i!)
+                        windowsPosition.remove(at: i!)
                         
                         man?.removeFromParent()
                         window?.removeFromParent()
@@ -151,27 +158,29 @@ class game: SKScene {
                         cementArea.alpha = 0.5
                         cementArea.size.height = 80
                         cementArea.size.width = 80
-                        cementArea.anchorPoint.x = 0
-                        cementArea.anchorPoint.y = 0
+                        cementArea.anchorPoint.x = 0.5
+                        cementArea.anchorPoint.y = 0.5
                         halfCementSize = cementArea.size.height/2
                         
-                        if location.y > (gameTop - cementArea.size.height) - nodeAboveTouch{
-                            cementArea.position.y = gameTop - cementArea.size.height
+                        if location.y > (gameTop - halfCementSize) - nodeAboveTouch{
+                            cementArea.position.y = gameTop - halfCementSize
+                        }else if location.y < gameBottom + halfCementSize - nodeAboveTouch{
+                            cementArea.position.y = gameBottom + halfCementSize
                         }else{
                             cementArea.position.y = location.y + nodeAboveTouch
                         }
                         
-                        if location.x < gameLeft + (halfCementSize) {
-                            cementArea.position.x = gameLeft
-                        }else if location.x > gameRight - (halfCementSize){
-                            cementArea.position.x = gameRight - cementArea.size.width
+                        if location.x < gameLeft + halfCementSize {
+                            cementArea.position.x = halfCementSize
+                        }else if location.x > gameRight - halfCementSize{
+                            cementArea.position.x = gameRight - halfCementSize
                         }else{
-                            cementArea.position.x = location.x - (halfCementSize)
+                            cementArea.position.x = location.x
                         }
                     }
                 }else if getCurrentTool() == . tape{
-                   if nodeName == "wallArea" || nodeName == "crack"  || nodeName == "openWindow" || (nodeName?.hasPrefix("window"))! || (nodeName?.hasPrefix("noCracks"))! || (nodeName?.hasPrefix("oldMan"))! {
-                    
+                    if nodeName == "wallArea" || nodeName == "crack"  || nodeName == "openWindow" || (nodeName?.hasPrefix("window"))! || (nodeName?.hasPrefix("noCracks"))! || (nodeName?.hasPrefix("oldMan"))! {
+                        
                         tape = true
                         
                         addChild(tapeArea)
@@ -181,13 +190,15 @@ class game: SKScene {
                         tapeArea.alpha = 0.5
                         tapeArea.size.height = 30
                         tapeArea.size.width = 320
-                        tapeArea.anchorPoint.x = 0
-                        tapeArea.anchorPoint.y = 0
-                        tapeArea.position.x = 0
+                        tapeArea.anchorPoint.x = 0.5
+                        tapeArea.anchorPoint.y = 0.5
+                        tapeArea.position.x = 160
                         halfTapeSize = tapeArea.size.height/2
-                    
-                        if location.y > (gameTop - tapeArea.size.height) - nodeAboveTouch{
-                            tapeArea.position.y = gameTop - tapeArea.size.height
+                        
+                        if location.y > (gameTop - halfTapeSize) - nodeAboveTouch{
+                            tapeArea.position.y = gameTop - halfTapeSize
+                        }else if location.y < gameBottom + halfTapeSize - nodeAboveTouch{
+                            tapeArea.position.y = gameBottom + halfTapeSize
                         }else{
                             tapeArea.position.y = location.y + nodeAboveTouch
                         }
@@ -231,28 +242,28 @@ class game: SKScene {
         let location = touch.location(in: self)
         
         if cement{
-            if location.x < gameLeft + (cementArea.size.width/2) {
-                cementArea.position.x = gameLeft
-            }else if location.x > gameRight - (cementArea.size.width/2){
-                cementArea.position.x = gameRight - cementArea.size.width
+            if location.x < gameLeft + halfCementSize {
+                cementArea.position.x = halfCementSize
+            }else if location.x > gameRight - halfCementSize{
+                cementArea.position.x = gameRight - halfCementSize
             }else{
-                cementArea.position.x = location.x - (cementArea.size.width/2)
+                cementArea.position.x = location.x
             }
             
-            if location.y > (gameTop - cementArea.size.height) - nodeAboveTouch{
-                cementArea.position.y = gameTop - cementArea.size.height
-            }else if location.y < gameBottom - nodeAboveTouch{
-                cementArea.position.y = gameBottom
+            if location.y > (gameTop - halfCementSize) - nodeAboveTouch{
+                cementArea.position.y = gameTop - halfCementSize
+            }else if location.y < gameBottom + halfCementSize - nodeAboveTouch{
+                cementArea.position.y = gameBottom + halfCementSize
             }else{
                 cementArea.position.y = location.y + nodeAboveTouch
             }
             
         }
         if tape{
-            if location.y > (gameTop - tapeArea.size.height) - nodeAboveTouch{
-                tapeArea.position.y = gameTop - tapeArea.size.height
-            }else if location.y < gameBottom - nodeAboveTouch{
-                tapeArea.position.y = gameBottom
+            if location.y > (gameTop - halfTapeSize) - nodeAboveTouch{
+                tapeArea.position.y = gameTop - halfTapeSize
+            }else if location.y < gameBottom + halfTapeSize - nodeAboveTouch{
+                tapeArea.position.y = gameBottom + halfTapeSize
             }else{
                 tapeArea.position.y = location.y + nodeAboveTouch
             }
@@ -287,7 +298,7 @@ class game: SKScene {
             tapeRoll.size.height = 30
             tapeRoll.size.width = 30
             tapeRoll.position.x = -30
-            tapeRoll.position.y = tapeArea.position.y + 15
+            tapeRoll.position.y = tapeArea.position.y
             
             tapeRoll.run(SKAction.moveTo(x: 335, duration: 0.5))
             
@@ -321,11 +332,11 @@ class game: SKScene {
             
             if currentState == .playing {
                 if cracks.count > 5 {
-                
+                    
                 }
                 
                 if num >= frequency {
-                    addCrack()
+                    openWindow()
                     num = 0
                 }else{
                     num += 1
@@ -340,7 +351,7 @@ class game: SKScene {
         
         addRandomTool()
         addRandomTool()
-//        addRandomTool()
+        //        addRandomTool()
         
         displayTools()
         
@@ -429,8 +440,6 @@ class game: SKScene {
         let position = box.position
         let size = box.size
         
-        print(position)
-        
         if tool == .glue{
             newTool = glueTool()
         }else if tool == .tape{
@@ -453,7 +462,7 @@ class game: SKScene {
     
     func addRandomTool() {
         var i = Int(arc4random_uniform(5))
-//        i = 1
+        i = 4
         var randTool: tools = .cement
         
         if i == 0 {
@@ -486,8 +495,6 @@ class game: SKScene {
         
         let x = box.position.x
         let y = box.position.y
-        
-        print("\(x)     \(y)")
         
         pointer.xScale = 1.5
         pointer.yScale = 1.5
@@ -643,7 +650,7 @@ class game: SKScene {
         let man = oldMan()
         addChild(man)
         
-        window.name = "openWindow"
+        window.name = "openWindow\(num)"
         window.zPosition = 2
         window.size.width = 60
         window.size.height = 60
@@ -655,20 +662,16 @@ class game: SKScene {
         
         window.position.x = openWindowX[num]
         window.position.y = openWindowY[num]
-        man.position.x = openWindowX[num] 
+        man.position.x = openWindowX[num]
         man.position.y = openWindowY[num] - 5
         
         windows.append(window)
         windowsPosition.append(num)
         
-//        Score += 3
+        //        Score += 3
     }
     
-    func waitForTape(node: SKSpriteNode) {
-        for crack in cracks{
-            if node.contains(crack.position){
-                removeCrack(nodeAtPoint: crack)
-            }
-        }
+    func movePeople() {
+        
     }
 }
