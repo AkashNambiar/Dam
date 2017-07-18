@@ -35,10 +35,12 @@ class game: SKScene, SKPhysicsContactDelegate {
     
     var openWindowX: [CGFloat] = [75, 245, 75, 245, 75, 245]
     var openWindowY: [CGFloat] = [415, 415, 310, 310, 205, 205]
+    var manPositionX: [CGFloat] = [17.5, 55, 92.5, 227.5, 265, 302.5]
+    var manPositionY: CGFloat = 55
     
     var num = 0
     var other = 0
-    var frequency = 150
+    var frequency = 50
     var offTheWall: CGFloat = 2.5
     
     var nodeAboveTouch: CGFloat = 0
@@ -293,7 +295,7 @@ class game: SKScene, SKPhysicsContactDelegate {
         }
         
         if tape{
-            let tapeRoll = rollTape()
+            let tapeRoll = textureToNode(name: "tapeRoll")
             addChild(tapeRoll)
             
             tapeRoll.name = "tapeRoll"
@@ -341,9 +343,10 @@ class game: SKScene, SKPhysicsContactDelegate {
                     let end = NSDate()
                     let time: Double = end.timeIntervalSince(crack.start as Date)
                     
-                    if time > 3{
+                    if time > 4{
                         dropBrick(node: crack)
-                        removeCrack(nodeAtPoint: crack)
+                        crack.start = NSDate()
+//                        removeCrack(nodeAtPoint: crack)
                     }
                 }
                 
@@ -367,20 +370,30 @@ class game: SKScene, SKPhysicsContactDelegate {
         let contactB:SKPhysicsBody = contact.bodyB
         
         let nodeA = contactA.node as! SKSpriteNode
+        //       print(nodeA.name)
         let nodeB = contactB.node as! SKSpriteNode
+        //     print(nodeB.name)
         
-        print(nodeA.name)
-        print(nodeB.name)
-        
-        if (nodeA.name == "singleBrick" && nodeB.name == "man")  || (nodeB.name == "singleBrick" && nodeA.name == "man"){
-            if nodeA.name == "singleBrick"{
-                nodeA.removeFromParent()
-                addText(node: nodeB)
-            }else{
-                nodeB.removeFromParent()
-                addText(node: nodeA)
-            }
+        if nodeA.name == "singlBrick" && nodeB.name == "singleBrick" {
+            waitToRemove(node: nodeA, time: 1.5)
+            waitToRemove(node: nodeB, time: 1.5)
             
+        }else if nodeA.name == "singlBrick" || nodeB.name == "singleBrick"{
+            
+            if (nodeB.name?.hasPrefix("man"))! || (nodeA.name?.hasPrefix("man"))!{
+                if (nodeA.name?.hasPrefix("man"))!{
+                    contactManBrick(man: nodeA, brick: nodeB)
+                }else{
+                    contactManBrick(man: nodeB, brick: nodeA)
+                }
+            }else if nodeB.name == "ground" || nodeA.name == "ground"{
+                
+                if nodeA.name == "singleBrick"{
+                    waitToRemove(node: nodeA, time: 1.5)
+                }else{
+                    waitToRemove(node: nodeB, time: 1.5)
+                }
+            }
         }
     }
     
@@ -394,6 +407,23 @@ class game: SKScene, SKPhysicsContactDelegate {
         displayTools()
         
         currentTool.text = getNameOfCurrentTool()
+        
+        for i in 0 ... 5{
+            let man = Man()
+            addChild(man)
+            
+            man.name = "man\(i)"
+            man.position.x = manPositionX[i]
+            man.position.y = manPositionY
+            man.zPosition = 1
+            man.size.height = 35
+            man.size.width = 25
+            
+            man.physicsBody =  SKPhysicsBody(rectangleOf: man.size)
+            man.physicsBody?.categoryBitMask = 1
+            man.physicsBody?.contactTestBitMask = 4294967295
+            man.physicsBody?.isDynamic = false
+        }
     }
     
     func tutorial() {
@@ -418,7 +448,7 @@ class game: SKScene, SKPhysicsContactDelegate {
         crack.position.y = CGFloat(randPosition.y)
         
         addChild(crack)
-        crack.run(SKAction.colorize(with: UIColor.black, colorBlendFactor: 3, duration: 0.1))
+        crack.run(SKAction.colorize(with: UIColor.black, colorBlendFactor: 3, duration: 0))
         
         crack.name = "crack"
         cracks.append(crack)
@@ -472,22 +502,22 @@ class game: SKScene, SKPhysicsContactDelegate {
     }
     
     func displayTool(tool: tools, i: Int) {
-        var newTool: SKSpriteNode = glueTool()
+        var newTool: SKSpriteNode = textureToNode(name: "glue")
         let box: SKSpriteNode = childNode(withName: "b\(i+1)") as! SKSpriteNode
         
         let position = box.position
         let size = box.size
         
         if tool == .glue{
-            newTool = glueTool()
+            newTool = textureToNode(name: "glue")
         }else if tool == .tape{
-            newTool = tapeTool()
+            newTool = textureToNode(name: "tape")
         }else if tool == .cement{
-            newTool = cementTool()
+            newTool = textureToNode(name: "cement")
         }else if tool == .wood{
-            newTool = woodTool()
+            newTool = textureToNode(name: "wood")
         }else if tool == .lock{
-            newTool = lockTool()
+            newTool = textureToNode(name: "lock")
         }
         
         newTool.size = size
@@ -527,7 +557,7 @@ class game: SKScene, SKPhysicsContactDelegate {
     
     func addPointer(box: SKSpriteNode) -> SKNode{
         
-        let pointer = point()
+        let pointer = textureToNode(name: "pointer")
         addChild(pointer)
         
         let x = box.position.x
@@ -607,52 +637,12 @@ class game: SKScene, SKPhysicsContactDelegate {
     func getCurrentTool() -> tools {
         return toolList[pointerPosition]
     }
-    
-    func woodTool() -> SKSpriteNode{
-        let texture = SKTexture(imageNamed: "wood")
+
+    func textureToNode(name: String) -> SKSpriteNode{
+        let texture = SKTexture(imageNamed: name)
         return SKSpriteNode(texture: texture)
     }
-    
-    func glueTool() -> SKSpriteNode{
-        let texture = SKTexture(imageNamed: "glue")
-        return SKSpriteNode(texture: texture)
-    }
-    
-    func cementTool() -> SKSpriteNode{
-        let texture = SKTexture(imageNamed: "cement")
-        return SKSpriteNode(texture: texture)
-    }
-    
-    func tapeTool() -> SKSpriteNode{
-        let texture = SKTexture(imageNamed: "tape")
-        return SKSpriteNode(texture: texture)
-    }
-    
-    func lockTool() -> SKSpriteNode{
-        let texture = SKTexture(imageNamed: "lock")
-        return SKSpriteNode(texture: texture)
-    }
-    
-    func basicCrack() -> SKSpriteNode {
-        let texture = SKTexture(imageNamed: "cracks")
-        return SKSpriteNode(texture: texture)
-    }
-    
-    func rollTape() -> SKSpriteNode{
-        let texture = SKTexture(imageNamed: "tapeRoll")
-        return SKSpriteNode(texture: texture)
-    }
-    
-    func point() -> SKSpriteNode {
-        let texture = SKTexture(imageNamed: "pointer")
-        return SKSpriteNode(texture: texture)
-    }
-    
-    func oldMan() -> SKSpriteNode {
-        let texture = SKTexture(imageNamed: "oldMan")
-        return SKSpriteNode(texture: texture)
-    }
-    
+
     func getNameOfCurrentTool() -> String{
         let tool = getCurrentTool()
         
@@ -684,7 +674,7 @@ class game: SKScene, SKPhysicsContactDelegate {
         let window = Window()
         addChild(window)
         
-        let man = oldMan()
+        let man = textureToNode(name: "oldMan")
         addChild(man)
         
         window.name = "openWindow\(num)"
@@ -730,12 +720,14 @@ class game: SKScene, SKPhysicsContactDelegate {
         brick.physicsBody = SKPhysicsBody(rectangleOf: brick.size)
         brick.physicsBody?.affectedByGravity = true
         brick.physicsBody?.contactTestBitMask = 4294967295
+        brick.physicsBody?.categoryBitMask = 3
+        brick.physicsBody?.collisionBitMask = 3
     }
     
     func addText(node: SKSpriteNode) {
         let text: SKLabelNode = SKLabelNode()
         
-        addChild(text)
+        //        addChild(text)
         
         text.text = "OW"
         text.fontName = "Georgia"
@@ -752,6 +744,35 @@ class game: SKScene, SKPhysicsContactDelegate {
         
         text.run(
             SKAction.sequence([wait,code])
+        )
+    }
+    
+    func contactManBrick(man: SKSpriteNode, brick: SKSpriteNode) {
+        addText(node: man)
+        waitToRemove(node: brick, time: 0)
+        
+        let node: Man = childNode(withName: man.name!) as! Man
+        let time: TimeInterval = 2
+        
+        if node.timesHit >= 4{
+            if node.position.x >= 160 {
+                node.run(SKAction.moveTo(x: 320 + node.size.width, duration: time))
+            }else{
+                node.run(SKAction.moveTo(x: -node.size.width, duration: time))
+            }
+            waitToRemove(node: node, time: time)
+        }else{
+            node.timesHit += 1
+            node.run(SKAction.colorize(with: UIColor.red, colorBlendFactor: node.colorBlendFactor + 0.25, duration: 0.1))
+        }
+    }
+    
+    func waitToRemove(node: SKSpriteNode, time: TimeInterval){
+        node.run(SKAction.sequence([SKAction.wait(forDuration: time),
+                                    SKAction.run {
+                                        node.removeFromParent()
+            }
+            ])
         )
     }
     

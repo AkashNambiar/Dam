@@ -10,7 +10,7 @@ import SpriteKit
 
 class Crack: SKSpriteNode {
     
-    let start = NSDate()
+    var start = NSDate()
     
     init() {
         // Make a texture from an image, a color, and size
