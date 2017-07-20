@@ -28,10 +28,11 @@ class MainMenu: SKScene {
                 print("Could not get Skview")
                 return
             }
-            
-            guard let scene = GameScene(fileNamed: "buildingScene") else {
+        
+            guard let scene = GameScene(fileNamed: "buildingsMenu") else {
                 return
             }
+     
             scene.scaleMode = .aspectFit
             
             skView.presentScene(scene)

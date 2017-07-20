@@ -10,10 +10,10 @@
 import SpriteKit
 import Foundation
 
-class game: SKScene, SKPhysicsContactDelegate {
+class buildingScene: SKScene, SKPhysicsContactDelegate {
     
     enum tools {
-        case glue, cement, tape, wood, lock
+        case glue, cement, tape, wood, lock, portal
     }
     
     enum playingState{
@@ -33,19 +33,24 @@ class game: SKScene, SKPhysicsContactDelegate {
     var toolPics: [SKSpriteNode] = []
     var specialTool: tools!
     
-    var openWindowX: [CGFloat] = [75, 245, 75, 245, 75, 245]
-    var openWindowY: [CGFloat] = [415, 415, 310, 310, 205, 205]
+    var openWindowX: [CGFloat] = [/*75, 245, 75, 245, 75, 245*/]
+    var openWindowY: [CGFloat] = [/*415, 415, 310, 310, 205, 205*/]
     var manPositionX: [CGFloat] = [17.5, 55, 92.5, 227.5, 265, 302.5]
     var manPositionY: CGFloat = 55
+    var leftMan: CGPoint = CGPoint(x: 227.5, y: 55)
+    var rightMan: CGPoint = CGPoint(x: 92.5, y: 55)
     
     var num = 0
     var other = 0
-    var frequency = 50
+    var frequency = 110
+    var peopleLeft = 0
     var offTheWall: CGFloat = 2.5
     
     var nodeAboveTouch: CGFloat = 0
     var halfCementSize: CGFloat = 0
     var halfTapeSize: CGFloat = 0
+    var halfPortalHeight: CGFloat = 0
+    var halfPortalWidth: CGFloat = 0
     var gameTop: CGFloat = 485
     var gameBottom: CGFloat = 155
     var gameRight: CGFloat = 320
@@ -53,13 +58,19 @@ class game: SKScene, SKPhysicsContactDelegate {
     
     let cementArea: SKSpriteNode = SKSpriteNode()
     let tapeArea: SKSpriteNode = SKSpriteNode()
+    let portalHole: Portal = Portal()
+    var portalIndex = 0
+    var portals: [Portal] = []
     var cement = false
     var tape = false
+    var portal = false
+    //    var portalStart = NSDate()
     
     var pointerPosition = 0
     var previousPointer: SKNode!
     
-    //var firstCrack: Crack!
+    var previousNode: SKSpriteNode = SKSpriteNode()
+    
     var cracks: [Crack] = []
     var cracksPositon: [CGPoint] = []
     
@@ -99,6 +110,43 @@ class game: SKScene, SKPhysicsContactDelegate {
         beginFunc()
     }
     
+    func beginFunc() {
+        
+        for i in 0 ... 5{
+            let man = Man()
+            addChild(man)
+            
+            man.name = "man\(i)"
+            man.position.x = manPositionX[i]
+            man.position.y = manPositionY
+            man.zPosition = 3
+            man.size.height = 35
+            man.size.width = 25
+            
+            man.physicsBody =  SKPhysicsBody(rectangleOf: man.size)
+            man.physicsBody?.categoryBitMask = 1
+            man.physicsBody?.contactTestBitMask = 4294967295
+            man.physicsBody?.isDynamic = false
+        }
+        
+        for i in 1 ... 6{
+            let window = childNode(withName: "window\(i)")
+            
+            openWindowX.append((window?.position.x)!)
+            openWindowY.append((window?.position.y)!)
+        }
+        
+        let pointer = addPointer(box: b1)
+        previousPointer = pointer
+        
+        addRandomTool()
+        addRandomTool()
+        
+        displayTools()
+        
+        currentTool.text = getNameOfCurrentTool()
+    }
+    
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         if currentState == .playing{
             let touch = touches.first!
@@ -135,7 +183,6 @@ class game: SKScene, SKPhysicsContactDelegate {
                                 index = i - 1
                             }
                         }
-                        print(index)
                         
                         let window = childNode(withName: "openWindow\(index)")
                         let man = childNode(withName: "oldMan\(index)")
@@ -208,7 +255,44 @@ class game: SKScene, SKPhysicsContactDelegate {
                         }else{
                             tapeArea.position.y = location.y + nodeAboveTouch
                         }
+                        
                     }
+                }else if getCurrentTool() == .portal{
+                    if nodeName == "wallArea" || nodeName == "crack"  || nodeName == "openWindow" || (nodeName?.hasPrefix("window"))! || (nodeName?.hasPrefix("noCracks"))! || (nodeName?.hasPrefix("oldMan"))! {
+                        
+                        portal = true
+                        
+                        let portalHole = Portal()
+                        addChild(portalHole)
+                        portals.append(portalHole)
+                        portalIndex = portals.index(of: portalHole)!
+                        
+                        portalHole.name = "portalHole"
+                        portalHole.color = UIColor.black
+                        portalHole.alpha = 0.8
+                        portalHole.size.height = 5
+                        portalHole.size.width = 90
+                        halfPortalHeight = portalHole.size.height/2
+                        halfPortalWidth = portalHole.size.width/2
+                        
+                        if location.y > (gameTop - halfPortalHeight) - nodeAboveTouch{
+                            portalHole.position.y = gameTop - halfPortalHeight
+                        }else if location.y < gameBottom + halfPortalHeight - nodeAboveTouch{
+                            portalHole.position.y = gameBottom + halfPortalHeight
+                        }else{
+                            portalHole.position.y = location.y + nodeAboveTouch
+                        }
+                        
+                        if location.x < gameLeft + halfPortalWidth {
+                            portalHole.position.x = halfPortalWidth
+                        }else if location.x > gameRight - halfPortalWidth{
+                            portalHole.position.x = gameRight - halfPortalWidth
+                        }else{
+                            portalHole.position.x = location.x
+                        }
+                        
+                    }
+                    
                 }else if nodeName == "crack"{
                     if cracks.contains(nodeAtPoint as! Crack){
                         if windowContains == false{
@@ -266,6 +350,7 @@ class game: SKScene, SKPhysicsContactDelegate {
             }
             
         }
+        
         if tape{
             if location.y > (gameTop - halfTapeSize) - nodeAboveTouch{
                 tapeArea.position.y = gameTop - halfTapeSize
@@ -275,6 +360,25 @@ class game: SKScene, SKPhysicsContactDelegate {
                 tapeArea.position.y = location.y + nodeAboveTouch
             }
         }
+        
+        if portal{
+            if location.y > (gameTop - halfPortalHeight) - nodeAboveTouch{
+                portals[portalIndex].position.y = gameTop - halfPortalHeight
+            }else if location.y < gameBottom + halfPortalHeight - nodeAboveTouch{
+                portals[portalIndex].position.y = gameBottom + halfPortalHeight
+            }else{
+                portals[portalIndex].position.y = location.y + nodeAboveTouch
+            }
+            
+            if location.x < gameLeft + halfPortalWidth {
+                portals[portalIndex].position.x = halfPortalWidth
+            }else if location.x > gameRight - halfPortalWidth{
+                portals[portalIndex].position.x = gameRight - halfPortalWidth
+            }else{
+                portals[portalIndex].position.x = location.x
+            }
+        }
+        
     }
     
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
@@ -325,6 +429,25 @@ class game: SKScene, SKPhysicsContactDelegate {
             currentTool.text = getNameOfCurrentTool()
         }
         
+        if portal{
+            portals[portalIndex].start = NSDate()
+            
+            portals[portalIndex].physicsBody = SKPhysicsBody(rectangleOf: portals[portalIndex].size)
+            portals[portalIndex].physicsBody?.affectedByGravity = false
+            portals[portalIndex].physicsBody?.isDynamic = false
+            portals[portalIndex].physicsBody?.contactTestBitMask = 7
+            portals[portalIndex].physicsBody?.categoryBitMask = 0
+            portals[portalIndex].physicsBody?.collisionBitMask = 7
+            
+            coolDown()
+            removeTool()
+            addRandomTool()
+            displayTools()
+            currentTool.text = getNameOfCurrentTool()
+            
+            portal = false
+        }
+        
         windowContains = false
     }
     
@@ -339,22 +462,41 @@ class game: SKScene, SKPhysicsContactDelegate {
             
             if currentState == .playing {
                 
+                if Score >= 5 {
+                    if Score % 10 == 0{
+                        movePeople(movingMan: leftMan)
+                    }else if Score % 5 == 0 {
+                        movePeople(movingMan: rightMan)
+                    }
+                }
+                
+                for portal in portals{
+                    let end = NSDate()
+                    let time = end.timeIntervalSince(portal.start as Date)
+                    
+                    if time > 5{
+                        portal.removeFromParent()
+                    }
+                }
+                
                 for crack in cracks{
                     let end = NSDate()
                     let time: Double = end.timeIntervalSince(crack.start as Date)
                     
-                    if time > 4{
+                    if time > 3.5{
                         dropBrick(node: crack)
                         crack.start = NSDate()
-//                        removeCrack(nodeAtPoint: crack)
                     }
                 }
                 
                 if num >= frequency {
-                    if other > 5{
-                        openWindow()
+                    if other > 7{
+                        addCrack()
+                        //                        openWindow()
+                        other = 0
                     }else{
                         addCrack()
+                        other += 1
                     }
                     
                     num = 0
@@ -366,25 +508,23 @@ class game: SKScene, SKPhysicsContactDelegate {
     }
     
     func didBegin(_ contact: SKPhysicsContact) {
-        let contactA:SKPhysicsBody = contact.bodyA
-        let contactB:SKPhysicsBody = contact.bodyB
+        let contactA: SKPhysicsBody = contact.bodyA
+        let contactB: SKPhysicsBody = contact.bodyB
         
         let nodeA = contactA.node as! SKSpriteNode
-        //       print(nodeA.name)
         let nodeB = contactB.node as! SKSpriteNode
-        //     print(nodeB.name)
         
-        if nodeA.name == "singlBrick" && nodeB.name == "singleBrick" {
+        if (nodeA.name == "singleBrick" && nodeB.name == "singleBrick") && (nodeA.name == "tooth" || nodeB.name == "tooth") {
             waitToRemove(node: nodeA, time: 1.5)
             waitToRemove(node: nodeB, time: 1.5)
             
-        }else if nodeA.name == "singlBrick" || nodeB.name == "singleBrick"{
+        }else if nodeA.name == "singleBrick" || nodeB.name == "singleBrick" || nodeA.name == "tooth" || nodeB.name == "tooth"{
             
             if (nodeB.name?.hasPrefix("man"))! || (nodeA.name?.hasPrefix("man"))!{
                 if (nodeA.name?.hasPrefix("man"))!{
-                    contactManBrick(man: nodeA, brick: nodeB)
+                    contactManSomething(man: nodeA, something: nodeB)
                 }else{
-                    contactManBrick(man: nodeB, brick: nodeA)
+                    contactManSomething(man: nodeB, something: nodeA)
                 }
             }else if nodeB.name == "ground" || nodeA.name == "ground"{
                 
@@ -393,36 +533,22 @@ class game: SKScene, SKPhysicsContactDelegate {
                 }else{
                     waitToRemove(node: nodeB, time: 1.5)
                 }
+                
+                if nodeA.name == "tooth"{
+                    waitToRemove(node: nodeA, time: 1.5)
+                }else{
+                    waitToRemove(node: nodeB, time: 1.5)
+                }
+                
+            }else if nodeB.name == "portalHole" || nodeA.name == "portalHole"{
+                
+                if nodeA.name == "singleBrick"{
+                    waitToRemove(node: nodeA, time: 0.0)
+                }else{
+                    waitToRemove(node: nodeB, time: 0.0 )
+                }
             }
-        }
-    }
-    
-    func beginFunc() {
-        let pointer = addPointer(box: b1)
-        previousPointer = pointer
-        
-        addRandomTool()
-        addRandomTool()
-        
-        displayTools()
-        
-        currentTool.text = getNameOfCurrentTool()
-        
-        for i in 0 ... 5{
-            let man = Man()
-            addChild(man)
             
-            man.name = "man\(i)"
-            man.position.x = manPositionX[i]
-            man.position.y = manPositionY
-            man.zPosition = 1
-            man.size.height = 35
-            man.size.width = 25
-            
-            man.physicsBody =  SKPhysicsBody(rectangleOf: man.size)
-            man.physicsBody?.categoryBitMask = 1
-            man.physicsBody?.contactTestBitMask = 4294967295
-            man.physicsBody?.isDynamic = false
         }
     }
     
@@ -518,6 +644,8 @@ class game: SKScene, SKPhysicsContactDelegate {
             newTool = textureToNode(name: "wood")
         }else if tool == .lock{
             newTool = textureToNode(name: "lock")
+        }else if tool == .portal{
+            newTool = textureToNode(name: "portal")
         }
         
         newTool.size = size
@@ -529,19 +657,22 @@ class game: SKScene, SKPhysicsContactDelegate {
     }
     
     func addRandomTool() {
-        var i = Int(arc4random_uniform(5))
+        var i = Int(arc4random_uniform(6))
         var randTool: tools = .cement
-        
+        //        i = 1
         if i == 0 {
             randTool = .cement
-        }else if i == 1{
+        }else if i == 4{
             randTool = .glue
         }else if i == 2{
             randTool = .tape
         }else if i == 3{
             randTool = .wood
-        }else if i == 4{
+        }else if i == 1{
             randTool = .lock
+            openWindow()
+        }else if i == 5{
+            randTool = .portal
         }
         
         toolList.append(randTool)
@@ -563,12 +694,13 @@ class game: SKScene, SKPhysicsContactDelegate {
         let x = box.position.x
         let y = box.position.y
         
+        pointer.name = "point"
         pointer.xScale = 1.5
         pointer.yScale = 1.5
         pointer.zPosition = 2
         
         pointer.position.x = x
-        pointer.position.y = y + 20
+        pointer.position.y = y + 30
         
         return pointer
     }
@@ -584,14 +716,16 @@ class game: SKScene, SKPhysicsContactDelegate {
         
         switch currentTool {
         case .cement:
-            duration = 1.5
+            duration = 0.5
         case .glue:
-            duration = 1
+            duration = 0.5
         case .tape:
             duration = 0.5
         case .wood:
             duration = 0.5
         case .lock:
+            duration = 0.5
+        case .portal:
             duration = 0.5
         }
         
@@ -613,6 +747,8 @@ class game: SKScene, SKPhysicsContactDelegate {
     
     func gameOver() {
         currentState = .notPlaying
+        
+        windowsPosition.removeAll()
         
         let texture = SKTexture(imageNamed: "gameOver")
         let gameOverLabel = SKSpriteNode(texture: texture)
@@ -637,12 +773,12 @@ class game: SKScene, SKPhysicsContactDelegate {
     func getCurrentTool() -> tools {
         return toolList[pointerPosition]
     }
-
+    
     func textureToNode(name: String) -> SKSpriteNode{
         let texture = SKTexture(imageNamed: name)
         return SKSpriteNode(texture: texture)
     }
-
+    
     func getNameOfCurrentTool() -> String{
         let tool = getCurrentTool()
         
@@ -659,6 +795,8 @@ class game: SKScene, SKPhysicsContactDelegate {
             name = "wood"
         case . lock:
             name = "lock"
+        case .portal:
+            name = "portal"
         }
         
         return name
@@ -695,17 +833,28 @@ class game: SKScene, SKPhysicsContactDelegate {
         windows.append(window)
         windowsPosition.append(num)
         
+        man.run(SKAction.repeatForever(SKAction.sequence([SKAction.wait(forDuration: 3),
+                                                          SKAction.run {
+                                                            self.dropTooth(node: man, num: num)
+            }])))
         //        Score += 3
     }
     
-    func movePeople() {
+    func movePeople(movingMan: CGPoint) {
+        let node: [SKSpriteNode] = nodes(at: movingMan) as! [SKSpriteNode]
         
+        for man in node{
+            if (man.name?.hasPrefix("man"))!{
+                man.run(SKAction.sequence([SKAction.moveTo(x: 160, duration: 1),
+                                           SKAction.run {
+                                            self.openDoorClose(man: man)
+                    }]))
+            }
+        }
     }
     
     func dropBrick(node: SKSpriteNode) {
-        let texture = SKTexture(imageNamed: "singleBrick")
-        let brick = SKSpriteNode(texture: texture)
-        
+        let brick = textureToNode(name: "singleBrick")
         addChild(brick)
         
         brick.name = "singleBrick"
@@ -722,6 +871,32 @@ class game: SKScene, SKPhysicsContactDelegate {
         brick.physicsBody?.contactTestBitMask = 4294967295
         brick.physicsBody?.categoryBitMask = 3
         brick.physicsBody?.collisionBitMask = 3
+        
+    }
+    
+    func dropTooth(node: SKSpriteNode, num: Int){
+        if windowsPosition.contains(num){
+            
+            let tooth = textureToNode(name: "tooth")
+            addChild(tooth)
+            
+            tooth.name = "tooth"
+            tooth.position = node.position
+            tooth.xScale = 0.75
+            tooth.yScale = 0.75
+            tooth.zPosition = 2
+            
+            let rand = arc4random_uniform(180)
+            tooth.zRotation = CGFloat(rand)
+            
+            tooth.physicsBody = SKPhysicsBody(texture: tooth.texture!, size: tooth.size)
+            tooth.physicsBody?.affectedByGravity = true
+            tooth.physicsBody?.contactTestBitMask = 4294967295
+            tooth.physicsBody?.categoryBitMask = 4
+            tooth.physicsBody?.collisionBitMask = 3
+        }else{
+            node.removeAllActions()
+        }
     }
     
     func addText(node: SKSpriteNode) {
@@ -747,33 +922,63 @@ class game: SKScene, SKPhysicsContactDelegate {
         )
     }
     
-    func contactManBrick(man: SKSpriteNode, brick: SKSpriteNode) {
-        addText(node: man)
-        waitToRemove(node: brick, time: 0)
-        
-        let node: Man = childNode(withName: man.name!) as! Man
-        let time: TimeInterval = 2
-        
-        if node.timesHit >= 4{
-            if node.position.x >= 160 {
-                node.run(SKAction.moveTo(x: 320 + node.size.width, duration: time))
+    func contactManSomething(man: SKSpriteNode, something: SKSpriteNode) {
+/*        if something != previousNode{
+            
+            addText(node: man)
+            waitToRemove(node: something, time: 0.0)
+            
+            let node: Man = childNode(withName: man.name!) as! Man
+            let time: TimeInterval = 2
+            
+            if node.hasActions(){
+                
             }else{
-                node.run(SKAction.moveTo(x: -node.size.width, duration: time))
+                if node.timesHit >= 4{
+                    if node.position.x >= 160 {
+                        node.run(SKAction.moveTo(x: 320 + node.size.width, duration: time))
+                    }else{
+                        node.run(SKAction.moveTo(x: -node.size.width, duration: time))
+                    }
+                    
+                    waitToRemove(node: node, time: time)
+                    
+                    peopleLeft += 1
+                    if peopleLeft == 6{
+                        gameOver()
+                    }
+                    
+                }else{
+                    node.timesHit += 1
+                    node.run(SKAction.colorize(with: UIColor.red, colorBlendFactor: node.colorBlendFactor + 0.25, duration: 0.1))
+                }
             }
-            waitToRemove(node: node, time: time)
-        }else{
-            node.timesHit += 1
-            node.run(SKAction.colorize(with: UIColor.red, colorBlendFactor: node.colorBlendFactor + 0.25, duration: 0.1))
-        }
+            previousNode = something
+        }*/
     }
     
     func waitToRemove(node: SKSpriteNode, time: TimeInterval){
         node.run(SKAction.sequence([SKAction.wait(forDuration: time),
                                     SKAction.run {
                                         node.removeFromParent()
-            }
-            ])
-        )
+            }]))
+    }
+    
+    func openDoorClose(man: SKSpriteNode) {
+        let door: SKSpriteNode = childNode(withName: "door") as! SKSpriteNode
+        let open = textureToNode(name: "openDoor")
+        
+        addChild(open)
+        
+        open.position = door.position
+        open.size = door.size
+        open.zPosition = door.zPosition + 1
+        
+        open.run(SKAction.sequence([SKAction.wait(forDuration: 1.5),
+                                    SKAction.run {
+                                        open.removeFromParent()
+                                        man.removeFromParent()
+            }]))
     }
     
 }
