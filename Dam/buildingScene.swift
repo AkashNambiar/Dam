@@ -64,7 +64,8 @@ class buildingScene: SKScene, SKPhysicsContactDelegate {
     var cement = false
     var tape = false
     var portal = false
-    //    var portalStart = NSDate()
+    
+    var scoreChanged = true
     
     var pointerPosition = 0
     var previousPointer: SKNode!
@@ -116,7 +117,7 @@ class buildingScene: SKScene, SKPhysicsContactDelegate {
             let man = Man()
             addChild(man)
             
-            man.name = "man\(i)"
+            man.name = "man"
             man.position.x = manPositionX[i]
             man.position.y = manPositionY
             man.zPosition = 3
@@ -464,9 +465,13 @@ class buildingScene: SKScene, SKPhysicsContactDelegate {
                 
                 if Score >= 5 {
                     if Score % 10 == 0{
-                        movePeople(movingMan: leftMan)
+//                        movePersonInside(movingMan: leftMan)
+//                        scoreChanged = false
                     }else if Score % 5 == 0 {
-                        movePeople(movingMan: rightMan)
+                        if scoreChanged{
+                            movePersonInside(movingMan: rightMan)
+                            scoreChanged = false
+                        }
                     }
                 }
                 
@@ -520,8 +525,8 @@ class buildingScene: SKScene, SKPhysicsContactDelegate {
             
         }else if nodeA.name == "singleBrick" || nodeB.name == "singleBrick" || nodeA.name == "tooth" || nodeB.name == "tooth"{
             
-            if (nodeB.name?.hasPrefix("man"))! || (nodeA.name?.hasPrefix("man"))!{
-                if (nodeA.name?.hasPrefix("man"))!{
+            if nodeB.name == "man" || nodeA.name == "man" {
+                if nodeA.name == "man"{
                     contactManSomething(man: nodeA, something: nodeB)
                 }else{
                     contactManSomething(man: nodeB, something: nodeA)
@@ -618,6 +623,7 @@ class buildingScene: SKScene, SKPhysicsContactDelegate {
         self.run(crackRemoval)
         
         Score += 1
+        scoreChanged = true
     }
     
     func displayTools() {
@@ -840,19 +846,6 @@ class buildingScene: SKScene, SKPhysicsContactDelegate {
         //        Score += 3
     }
     
-    func movePeople(movingMan: CGPoint) {
-        let node: [SKSpriteNode] = nodes(at: movingMan) as! [SKSpriteNode]
-        
-        for man in node{
-            if (man.name?.hasPrefix("man"))!{
-                man.run(SKAction.sequence([SKAction.moveTo(x: 160, duration: 1),
-                                           SKAction.run {
-                                            self.openDoorClose(man: man)
-                    }]))
-            }
-        }
-    }
-    
     func dropBrick(node: SKSpriteNode) {
         let brick = textureToNode(name: "singleBrick")
         addChild(brick)
@@ -902,8 +895,6 @@ class buildingScene: SKScene, SKPhysicsContactDelegate {
     func addText(node: SKSpriteNode) {
         let text: SKLabelNode = SKLabelNode()
         
-        //        addChild(text)
-        
         text.text = "OW"
         text.fontName = "Georgia"
         text.fontSize = 18
@@ -923,38 +914,46 @@ class buildingScene: SKScene, SKPhysicsContactDelegate {
     }
     
     func contactManSomething(man: SKSpriteNode, something: SKSpriteNode) {
-/*        if something != previousNode{
+        if something != previousNode{
             
             addText(node: man)
             waitToRemove(node: something, time: 0.0)
             
-            let node: Man = childNode(withName: man.name!) as! Man
+            let allNodes = nodes(at: man.position)
+            var node: Man = childNode(withName: man.name!) as! Man
+            
+            for n in allNodes{
+                if n.name == "man"{
+                    node = n as! Man
+                }
+            }
             let time: TimeInterval = 2
             
             if node.hasActions(){
                 
             }else{
                 if node.timesHit >= 4{
-                    if node.position.x >= 160 {
+/*                    if node.position.x >= 160 {
                         node.run(SKAction.moveTo(x: 320 + node.size.width, duration: time))
                     }else{
                         node.run(SKAction.moveTo(x: -node.size.width, duration: time))
                     }
-                    
+ 
                     waitToRemove(node: node, time: time)
                     
                     peopleLeft += 1
+ 
                     if peopleLeft == 6{
                         gameOver()
                     }
-                    
+  */
                 }else{
                     node.timesHit += 1
                     node.run(SKAction.colorize(with: UIColor.red, colorBlendFactor: node.colorBlendFactor + 0.25, duration: 0.1))
                 }
             }
             previousNode = something
-        }*/
+        }
     }
     
     func waitToRemove(node: SKSpriteNode, time: TimeInterval){
@@ -979,6 +978,61 @@ class buildingScene: SKScene, SKPhysicsContactDelegate {
                                         open.removeFromParent()
                                         man.removeFromParent()
             }]))
+    }
+    
+    func movePersonInside(movingMan: CGPoint) {
+        let node: [SKSpriteNode] = nodes(at: movingMan) as! [SKSpriteNode]
+        
+        for man in node{
+            if man.name == "man"{
+                man.run(SKAction.sequence([SKAction.moveTo(x: 160, duration: 1),
+                                           SKAction.run {
+                                            self.openDoorClose(man: man)
+                    }, SKAction.run(moveAllPeople),
+                       SKAction.run {
+                        self.moveNewPerson(location: movingMan)
+                    }
+                    ]))
+            }
+        }
+    }
+    
+    func moveAllPeople() {
+        for i in 0 ... 1{
+            let point: CGPoint = CGPoint(x: manPositionX[i], y: manPositionY)
+            let node: [SKSpriteNode] = nodes(at: point) as! [SKSpriteNode]
+            
+            for man in node{
+                if man.name == "man"{
+                    man.run(SKAction.moveTo(x: manPositionX[i+1], duration: 1))
+                }
+            }
+            
+        }
+    }
+    
+    func moveNewPerson(location: CGPoint) {
+        let man = Man()
+        addChild(man)
+        
+        man.name = "man"
+        man.zPosition = 3
+        man.size.height = 35
+        man.size.width = 25
+        man.position.y = manPositionY
+        
+        if location.x < 160{
+            man.position.x = -25
+            man.run(SKAction.moveTo(x: manPositionX[0], duration: 1))
+        }else{
+            man.position.x = 345
+            man.run(SKAction.moveTo(x: manPositionX[5], duration: 1))
+        }
+        
+        man.physicsBody =  SKPhysicsBody(rectangleOf: man.size)
+        man.physicsBody?.categoryBitMask = 1
+        man.physicsBody?.contactTestBitMask = 4294967295
+        man.physicsBody?.isDynamic = false
     }
     
 }
