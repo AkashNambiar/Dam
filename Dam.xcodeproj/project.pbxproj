@@ -8,9 +8,14 @@
 
 /* Begin PBXBuildFile section */
 		380767B41F16BDAE00E6927F /* instructionsMenu.sks in Resources */ = {isa = PBXBuildFile; fileRef = 380767B31F16BDAD00E6927F /* instructionsMenu.sks */; };
+		381BF7461F29035C000CFCF0 /* toolsInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 381BF7451F29035C000CFCF0 /* toolsInfo.swift */; };
 		381EC98F1F16D6370056C4CE /* instructionsMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 381EC98E1F16D6370056C4CE /* instructionsMenu.swift */; };
 		381F0A411F19910C000B2368 /* buildingScene.sks in Resources */ = {isa = PBXBuildFile; fileRef = 381F0A401F19910C000B2368 /* buildingScene.sks */; };
 		38247FF41F1E71D90089F9FC /* Man.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38247FF31F1E71D90089F9FC /* Man.swift */; };
+		384390D11F27CA150038DC8D /* toolsMenu.sks in Resources */ = {isa = PBXBuildFile; fileRef = 384390D01F27CA150038DC8D /* toolsMenu.sks */; };
+		384390D31F27F2740038DC8D /* toolsInfo.sks in Resources */ = {isa = PBXBuildFile; fileRef = 384390D21F27F2740038DC8D /* toolsInfo.sks */; };
+		384390D51F27F4740038DC8D /* toolsMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 384390D41F27F4740038DC8D /* toolsMenu.swift */; };
+		384390D71F2805FF0038DC8D /* buildingScene3.sks in Resources */ = {isa = PBXBuildFile; fileRef = 384390D61F2805FF0038DC8D /* buildingScene3.sks */; };
 		38449D7E1F141B3C002EFB00 /* MainMenu.sks in Resources */ = {isa = PBXBuildFile; fileRef = 38449D7D1F141B3C002EFB00 /* MainMenu.sks */; };
 		38449D801F141B53002EFB00 /* MainMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38449D7F1F141B53002EFB00 /* MainMenu.swift */; };
 		38449D821F141C28002EFB00 /* MSButtonNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38449D811F141C28002EFB00 /* MSButtonNode.swift */; };
@@ -26,6 +31,8 @@
 		3893B6CE1F13DB4200C7DBF2 /* DamTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3893B6CD1F13DB4200C7DBF2 /* DamTests.swift */; };
 		3893B6D91F13DB4200C7DBF2 /* DamUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3893B6D81F13DB4200C7DBF2 /* DamUITests.swift */; };
 		3893B6E71F13E0D200C7DBF2 /* Crack.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3893B6E61F13E0D200C7DBF2 /* Crack.swift */; };
+		389C45EC1F2AB67E00964D3B /* lifetimeScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 389C45EB1F2AB67E00964D3B /* lifetimeScene.swift */; };
+		389C45EE1F2AB68B00964D3B /* lifetimeScene.sks in Resources */ = {isa = PBXBuildFile; fileRef = 389C45ED1F2AB68B00964D3B /* lifetimeScene.sks */; };
 		38CF3E801F1FDF0A00D4F1A8 /* Portal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38CF3E7F1F1FDF0A00D4F1A8 /* Portal.swift */; };
 		38CF3E821F20066800D4F1A8 /* buildingsMenu.sks in Resources */ = {isa = PBXBuildFile; fileRef = 38CF3E811F20066800D4F1A8 /* buildingsMenu.sks */; };
 		38CF3E841F20078300D4F1A8 /* buildingsMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38CF3E831F20078300D4F1A8 /* buildingsMenu.swift */; };
@@ -51,9 +58,14 @@
 
 /* Begin PBXFileReference section */
 		380767B31F16BDAD00E6927F /* instructionsMenu.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = instructionsMenu.sks; sourceTree = "<group>"; };
+		381BF7451F29035C000CFCF0 /* toolsInfo.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = toolsInfo.swift; sourceTree = "<group>"; };
 		381EC98E1F16D6370056C4CE /* instructionsMenu.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = instructionsMenu.swift; sourceTree = "<group>"; };
 		381F0A401F19910C000B2368 /* buildingScene.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = buildingScene.sks; sourceTree = "<group>"; };
 		38247FF31F1E71D90089F9FC /* Man.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Man.swift; sourceTree = "<group>"; };
+		384390D01F27CA150038DC8D /* toolsMenu.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = toolsMenu.sks; sourceTree = "<group>"; };
+		384390D21F27F2740038DC8D /* toolsInfo.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = toolsInfo.sks; sourceTree = "<group>"; };
+		384390D41F27F4740038DC8D /* toolsMenu.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = toolsMenu.swift; sourceTree = "<group>"; };
+		384390D61F2805FF0038DC8D /* buildingScene3.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = buildingScene3.sks; sourceTree = "<group>"; };
 		38449D7D1F141B3C002EFB00 /* MainMenu.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = MainMenu.sks; sourceTree = "<group>"; };
 		38449D7F1F141B53002EFB00 /* MainMenu.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MainMenu.swift; sourceTree = "<group>"; };
 		38449D811F141C28002EFB00 /* MSButtonNode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MSButtonNode.swift; sourceTree = "<group>"; };
@@ -75,6 +87,8 @@
 		3893B6D81F13DB4200C7DBF2 /* DamUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DamUITests.swift; sourceTree = "<group>"; };
 		3893B6DA1F13DB4200C7DBF2 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		3893B6E61F13E0D200C7DBF2 /* Crack.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Crack.swift; sourceTree = "<group>"; };
+		389C45EB1F2AB67E00964D3B /* lifetimeScene.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = lifetimeScene.swift; sourceTree = "<group>"; };
+		389C45ED1F2AB68B00964D3B /* lifetimeScene.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = lifetimeScene.sks; sourceTree = "<group>"; };
 		38CF3E7F1F1FDF0A00D4F1A8 /* Portal.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Portal.swift; sourceTree = "<group>"; };
 		38CF3E811F20066800D4F1A8 /* buildingsMenu.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = buildingsMenu.sks; sourceTree = "<group>"; };
 		38CF3E831F20078300D4F1A8 /* buildingsMenu.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = buildingsMenu.swift; sourceTree = "<group>"; };
@@ -131,9 +145,16 @@
 			children = (
 				381F0A401F19910C000B2368 /* buildingScene.sks */,
 				38CF3E851F200B3900D4F1A8 /* buildingScene2.sks */,
+				384390D61F2805FF0038DC8D /* buildingScene3.sks */,
 				385A06041F1BE8A400C674FB /* buildingScene.swift */,
 				38CF3E811F20066800D4F1A8 /* buildingsMenu.sks */,
 				38CF3E831F20078300D4F1A8 /* buildingsMenu.swift */,
+				384390D01F27CA150038DC8D /* toolsMenu.sks */,
+				384390D41F27F4740038DC8D /* toolsMenu.swift */,
+				384390D21F27F2740038DC8D /* toolsInfo.sks */,
+				381BF7451F29035C000CFCF0 /* toolsInfo.swift */,
+				389C45ED1F2AB68B00964D3B /* lifetimeScene.sks */,
+				389C45EB1F2AB67E00964D3B /* lifetimeScene.swift */,
 			);
 			name = "New Group";
 			sourceTree = "<group>";
@@ -305,12 +326,16 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				384390D71F2805FF0038DC8D /* buildingScene3.sks in Resources */,
+				384390D31F27F2740038DC8D /* toolsInfo.sks in Resources */,
 				3893B6BE1F13DB4100C7DBF2 /* Main.storyboard in Resources */,
 				380767B41F16BDAE00E6927F /* instructionsMenu.sks in Resources */,
 				38449D7E1F141B3C002EFB00 /* MainMenu.sks in Resources */,
 				381F0A411F19910C000B2368 /* buildingScene.sks in Resources */,
 				38CF3E861F200B3900D4F1A8 /* buildingScene2.sks in Resources */,
+				389C45EE1F2AB68B00964D3B /* lifetimeScene.sks in Resources */,
 				3893B6B51F13DB4100C7DBF2 /* GameScene.sks in Resources */,
+				384390D11F27CA150038DC8D /* toolsMenu.sks in Resources */,
 				3893B6C01F13DB4100C7DBF2 /* Assets.xcassets in Resources */,
 				3893B6C31F13DB4100C7DBF2 /* LaunchScreen.storyboard in Resources */,
 				38CF3E821F20066800D4F1A8 /* buildingsMenu.sks in Resources */,
@@ -341,7 +366,9 @@
 				38247FF41F1E71D90089F9FC /* Man.swift in Sources */,
 				381EC98F1F16D6370056C4CE /* instructionsMenu.swift in Sources */,
 				38449D801F141B53002EFB00 /* MainMenu.swift in Sources */,
+				389C45EC1F2AB67E00964D3B /* lifetimeScene.swift in Sources */,
 				3893B6B91F13DB4100C7DBF2 /* GameScene.swift in Sources */,
+				384390D51F27F4740038DC8D /* toolsMenu.swift in Sources */,
 				38CF3E841F20078300D4F1A8 /* buildingsMenu.swift in Sources */,
 				385A06051F1BE8A400C674FB /* buildingScene.swift in Sources */,
 				3893B6BB1F13DB4100C7DBF2 /* GameViewController.swift in Sources */,
@@ -350,6 +377,7 @@
 				38CF3E801F1FDF0A00D4F1A8 /* Portal.swift in Sources */,
 				3893B6B31F13DB4100C7DBF2 /* AppDelegate.swift in Sources */,
 				3891FCE11F19254600B84DF4 /* Window.swift in Sources */,
+				381BF7461F29035C000CFCF0 /* toolsInfo.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
