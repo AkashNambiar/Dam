@@ -2,15 +2,17 @@
   "images" : [
     {
       "idiom" : "universal",
+      "filename" : "cement.png",
       "scale" : "1x"
     },
     {
       "idiom" : "universal",
-      "filename" : "cement.png",
+      "filename" : "cement@2x.png",
       "scale" : "2x"
     },
     {
       "idiom" : "universal",
+      "filename" : "cement@3x.png",
       "scale" : "3x"
     }
   ],

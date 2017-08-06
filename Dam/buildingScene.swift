@@ -15,7 +15,7 @@ import Foundation
 class buildingScene: SKScene, SKPhysicsContactDelegate {
     
     enum tools {
-        case glue, cement, tape, wood, lock, portal, wall, ice, health
+        case glue, cement, tape, wood, lock, portal, wall, ice, health, police
     }
     
     enum playingState{
@@ -23,12 +23,12 @@ class buildingScene: SKScene, SKPhysicsContactDelegate {
     }
     
     var scoreLabel: SKLabelNode!
-    var trashButton: MSButtonNode!
     var waitBar: SKSpriteNode!
     var currentTool: SKLabelNode!
     var b1: SKSpriteNode!
     var b2: SKSpriteNode!
-    var returnButton: MSButtonNode!
+    var retryButton: MSButtonNode!
+    var homeButton: MSButtonNode!
     
     var currentState: playingState = .playing
     
@@ -57,7 +57,7 @@ class buildingScene: SKScene, SKPhysicsContactDelegate {
     var halfTapeSize: CGFloat = 0
     var halfPortalHeight: CGFloat = 0
     var halfPortalWidth: CGFloat = 0
-    var gameTop: CGFloat = 485
+    var gameTop: CGFloat = 515
     var gameBottom: CGFloat = 155
     var gameRight: CGFloat = 320
     var gameLeft: CGFloat = 0
@@ -74,9 +74,15 @@ class buildingScene: SKScene, SKPhysicsContactDelegate {
     var portal = false
     
     var scoreChanged = true
-    var tutorialInProgress = true
     var manMovingInside = false
     
+    var tutorial1 = false
+    var tutorial2 = false
+    var tutorial3 = false
+    var tutorial4 = false
+    var tutorial5 = true
+    
+    var firstCrackStart = NSDate()
     var crackStart = NSDate()
     var crackInterval: TimeInterval = 4
     var oldManMoveStart = NSDate()
@@ -85,13 +91,17 @@ class buildingScene: SKScene, SKPhysicsContactDelegate {
     var previousPointer: SKNode!
     
     var previousNode: SKSpriteNode = SKSpriteNode()
+    var prevoiusWindowOpened: Int = 0
     
     var cracks: [Crack] = []
     var cracksPositon: [CGPoint] = []
     
     let coolDownLabel: SKLabelNode = SKLabelNode()
+    let warningLabel = SKLabelNode()
+    let tutorialLabel = SKLabelNode()
     var coolingDown = false
     var ifPressedTwice = false
+    var warningLabelShowing = false
     
     var windowContains = false
     var windows: [Window] = []
@@ -109,23 +119,15 @@ class buildingScene: SKScene, SKPhysicsContactDelegate {
     
     override func didMove(to view: SKView) {
         scoreLabel = childNode(withName: "score") as! SKLabelNode
-        trashButton = childNode(withName: "trashButton") as! MSButtonNode
         waitBar = childNode(withName: "waitBar") as! SKSpriteNode
         currentTool = childNode(withName: "currentTool") as! SKLabelNode
         b1 = childNode(withName: "b1") as! SKSpriteNode
         b2 = childNode(withName: "b2") as! SKSpriteNode
-        returnButton = childNode(withName: "//returnButton") as! MSButtonNode
+        retryButton = childNode(withName: "//retryButton") as! MSButtonNode
+        homeButton = childNode(withName: "//homeButton") as! MSButtonNode
         
-        trashButton.selectedHandler = {
-            if self.currentState == .playing{
-                self.removeTool()
-                self.addRandomTool()
-                self.displayTools()
-                self.currentTool.text = self.getNameOfCurrentTool()
-            }
-        }
-        
-        returnButton.isHidden = true
+        retryButton.isHidden = true
+        homeButton.isHidden = true
         
         physicsWorld.contactDelegate = self
         
@@ -153,6 +155,7 @@ class buildingScene: SKScene, SKPhysicsContactDelegate {
             //            man.run(SKAction.colorize(with: colors[i], colorBlendFactor: 1, duration: 0.01))
             
             men[i] = 1
+            
         }
         
         if buildingMenu.oldManMoving{
@@ -177,11 +180,26 @@ class buildingScene: SKScene, SKPhysicsContactDelegate {
             openWindowY.append((window?.position.y)!)
         }
         
+        let userDefaults = UserDefaults.standard
+        let tutorialCompleted = userDefaults.bool(forKey: "tutorialCompelted") as Bool ?? false
+        userDefaults.synchronize()
+        
+        if !tutorialCompleted{
+            currentState = .tutorial
+        }
+        
+        if currentState == .tutorial{
+            tutorial()
+            
+            toolList.append(.glue)
+            toolList.append(.wood)
+        }else{
+            addRandomTool()
+            addRandomTool()
+        }
+        
         let pointer = addPointer(box: b1)
         previousPointer = pointer
-        
-        addRandomTool()
-        addRandomTool()
         
         displayTools()
         
@@ -189,7 +207,17 @@ class buildingScene: SKScene, SKPhysicsContactDelegate {
     }
     
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        if currentState == .playing && cement == false && tape == false && portal == false{
+        
+        if tutorial3{
+            tutorialLabel.removeFromParent()
+            scene?.view?.isPaused = false
+            
+            tutorial3 = false
+            
+            endTutorial()
+        }
+        
+        if currentState != .notPlaying && cement == false && tape == false && portal == false{
             let touch = touches.first!
             let location = touch.location(in: self)
             let nodeAtPoint = atPoint(location)
@@ -240,17 +268,32 @@ class buildingScene: SKScene, SKPhysicsContactDelegate {
                         addRandomTool()
                         displayTools()
                         currentTool.text = getNameOfCurrentTool()
+                        
+                        Score += 1
                     }else if nodeName == "crack"{
-                        coolDownLabel.text = "LOCKS CLOSE WINDOWS"
-                        coolDownLabel.fontName = "Didot Bold"
-                        coolDownLabel.fontSize = 30
-                        coolDownLabel.run(SKAction.colorize(with: UIColor.red, colorBlendFactor: 0.6, duration: 0.01))
-                        
-                        coolDownLabel.name = "coolDown"
-                        coolDownLabel.position.x = 160
-                        coolDownLabel.position.y = 400
-                        coolDownLabel.zPosition = 5
-                        
+                        if !warningLabelShowing{
+                            warningLabelShowing = true
+                            
+                            addChild(warningLabel)
+                            
+                            warningLabel.text = "LOCKS CLOSE WINDOWS"
+                            warningLabel.fontName = "Didot Bold"
+                            warningLabel.fontSize = 20
+                            warningLabel.run(SKAction.colorize(with: UIColor.white, colorBlendFactor: 0.8, duration: 0))
+                            
+                            warningLabel.name = "warning"
+                            warningLabel.position.x = 160
+                            warningLabel.position.y = 400
+                            warningLabel.zPosition = 58
+                            
+                            let wait = SKAction.wait(forDuration: 2)
+                            let action = SKAction.run {
+                                self.warningLabel.removeFromParent()
+                                self.warningLabelShowing = false
+                            }
+                            
+                            self.run(SKAction.sequence([wait,action]))
+                        }
                     }
                 }else if getCurrentTool() == .cement {
                     if nodeName == "wallArea" || nodeName == "crack"  || nodeName == "openWindow" || (nodeName?.hasPrefix("window"))! || (nodeName?.hasPrefix("noCracks"))! || (nodeName?.hasPrefix("oldMan"))! {
@@ -363,63 +406,97 @@ class buildingScene: SKScene, SKPhysicsContactDelegate {
                         newWallArea.position.y = 320
                     }
                 }else if getCurrentTool() == .ice{
-                    if nodeName == "wallArea" || nodeName == "crack"  || nodeName == "openWindow" || (nodeName?.hasPrefix("window"))! || (nodeName?.hasPrefix("noCracks"))! || (nodeName?.hasPrefix("oldMan"))! {
+                    let node = nodes(at: location)
+                    
+                    for i in node{
                         
-                        let node = nodes(at: location)
-                        
-                        for i in node{
-                            if i.name == "oldManMoving"{
-                                
-                                i.removeAllActions()
-                                
-                                i.run(SKAction.colorize(with: UIColor.cyan, colorBlendFactor: 1, duration: 0.01))
-                                
-                                let wait = SKAction.wait(forDuration: freezeTime)
-                                let code = SKAction.run {
-                                    i.run(SKAction.colorize(with: UIColor.cyan, colorBlendFactor: 0, duration: 0))
-                                    self.oldManMove(old: i as! SKSpriteNode)
-                                }
-                                
-                                i.run(SKAction.sequence([wait, code]))
-                            }else if i.name == "oldMan"{
-                                
-                                if i.hasActions(){
-                                    i.removeAllActions()
-                                    
-                                    i.run(SKAction.colorize(with: UIColor.cyan, colorBlendFactor: 1, duration: 0.01))
-                                    
-                                    let wait = SKAction.wait(forDuration: freezeTime)
-                                    let action = SKAction.repeatForever(SKAction.sequence([SKAction.run{
-                                        i.run(SKAction.colorize(with: UIColor.black, colorBlendFactor: 0, duration: 0))
-                                        },SKAction.wait(forDuration: 1.5),
-                                          SKAction.run {
-                                            self.makeTooth(node: i as! SKSpriteNode)
-                                        }]))
-                                    
-                                    i.run(SKAction.sequence([wait, action]))
-                                }
-                                
-                            }else if i.name == "crack"{
-                                
-                                if i.hasActions(){
-                                    i.removeAllActions()
-                                    
-                                    i.run(SKAction.colorize(with: UIColor.cyan, colorBlendFactor: 1, duration: 0.01))
-                                    
-                                    let wait = SKAction.wait(forDuration: freezeTime)
-                                    let action = SKAction.repeatForever(SKAction.sequence([SKAction.run{
-                                        i.run(SKAction.colorize(with: UIColor.black, colorBlendFactor: 3, duration: 0))
-                                        },SKAction.wait(forDuration: 1.5),
-                                          SKAction.run {
-                                            self.dropBrick(node: i as! SKSpriteNode)
-                                        }]))
-                                    
-                                    i.run(SKAction.sequence([wait, action]))
-                                }
+                        if i.name == "oldManMoving"{
+                            
+                            i.removeAllActions()
+                            
+                            i.run(SKAction.colorize(with: UIColor.cyan, colorBlendFactor: 1, duration: 0))
+                            
+                            let wait = SKAction.wait(forDuration: freezeTime)
+                            let code = SKAction.run {
+                                i.run(SKAction.colorize(with: UIColor.cyan, colorBlendFactor: 0, duration: 0))
+                                self.oldManMove(old: i as! SKSpriteNode)
                             }
                             
+                            i.run(SKAction.sequence([wait, code]))
+                        }else if i.name == "oldMan"{
+                            
+                            if i.hasActions(){
+                                i.removeAllActions()
+                                
+                                i.run(SKAction.colorize(with: UIColor.cyan, colorBlendFactor: 1, duration: 0))
+                                
+                                let wait = SKAction.wait(forDuration: freezeTime)
+                                let action = SKAction.repeatForever(SKAction.sequence([SKAction.run{
+                                    i.run(SKAction.colorize(with: UIColor.black, colorBlendFactor: 0, duration: 0))
+                                    },SKAction.wait(forDuration: 1.5),
+                                      SKAction.run {
+                                        self.makeTooth(node: i as! SKSpriteNode)
+                                    }]))
+                                
+                                i.run(SKAction.sequence([wait, action]))
+                            }
+                            
+                        }else if i.name == "crack"{
+                            
+                            if i.hasActions(){
+                                i.removeAllActions()
+                                
+                                i.run(SKAction.colorize(with: UIColor.cyan, colorBlendFactor: 1, duration: 0))
+                                
+                                let wait = SKAction.wait(forDuration: freezeTime)
+                                let action = SKAction.repeatForever(SKAction.sequence([SKAction.run{
+                                    i.run(SKAction.colorize(with: UIColor.black, colorBlendFactor: 3, duration: 0))
+                                    },SKAction.wait(forDuration: 1.5),
+                                      SKAction.run {
+                                        self.dropBrick(node: i as! SKSpriteNode)
+                                    }]))
+                                
+                                i.run(SKAction.sequence([wait, action]))
+                            }
+                            
+                        }else if i.name == "robber"{
+                            if i.hasActions(){
+                                i.removeAllActions()
+                                
+                                i.run(SKAction.colorize(with: UIColor.cyan, colorBlendFactor: 1, duration: 0))
+                                
+                                let wait = SKAction.wait(forDuration: freezeTime)
+                                let action = SKAction.run {
+                                    let x = i.position.x
+                                    
+                                    let action = SKAction.run {
+                                        var robbedMoney = 200
+                                        
+                                        if self.moneyCollected < 200{
+                                            robbedMoney = self.moneyCollected
+                                        }
+                                        
+                                        self.addText(node: i as! SKSpriteNode, t: "-\(robbedMoney)", color: UIColor.red)
+                                        
+                                        self.moneyCollected -= robbedMoney
+                                        i.removeFromParent()
+                                    }
+                                    
+                                    if x < 160{
+                                        i.run(SKAction.sequence([SKAction.moveTo(x: 160, duration: TimeInterval(5/abs(160/x))), action]))
+                                    }else{
+                                        i.run(SKAction.sequence([SKAction.moveTo(x: 160, duration: TimeInterval(5/abs(x/160))), action]))
+                                    }
+                                    
+                                    i.run(SKAction.colorize(with: UIColor.cyan, colorBlendFactor: 0, duration: 0))
+                                }
+                                
+                                i.run(SKAction.sequence([wait,action]))
+                            }
                         }
+                        
                     }
+                    
                 }else if getCurrentTool() == .health{
                     if (nodeName?.hasPrefix("man"))!{
                         let node = childNode(withName: nodeName!) as! Man
@@ -428,39 +505,74 @@ class buildingScene: SKScene, SKPhysicsContactDelegate {
                         
                         node.run(SKAction.colorize(with: UIColor.red, colorBlendFactor: 0, duration: 0))
                     }
-                }else if nodeName == "crack"{
-                    if cracks.contains(nodeAtPoint as! Crack){
-                        if tutorialInProgress{
-                            removeCrack(nodeAtPoint: nodeAtPoint)
-                            
-                            coolDown()
-                            removeTool()
-                            addRandomTool()
-                            displayTools()
-                            currentTool.text = getNameOfCurrentTool()
+                }else if getCurrentTool() == .police{
+                    if nodeName == "robber"{
+                        let node = childNode(withName: "robber") as! SKSpriteNode
+                        
+                        node.removeAllActions()
+                        
+                        let action = SKAction.run {
+                            node.removeFromParent()
+                        }
+                        if node.position.x > 160{
+                            node.run(SKAction.sequence([SKAction.moveBy(x: 200, y: 0, duration: 2), action]))
                         }else{
-                            removeCrack(nodeAtPoint: nodeAtPoint)
-                            
-                            tutorialInProgress = true
+                            node.run(SKAction.sequence([SKAction.moveBy(x: -200, y: 0, duration: 2), action]))
                         }
                     }
+                }else if nodeName == "crack"{
+                    if currentState == .tutorial && tutorial5{
+                        
+                        let wait = SKAction.wait(forDuration: crackInterval)
+                        let action = SKAction.run{
+                            self.tutorial1 = true
+                        }
+                        
+                        run(SKAction.sequence([wait,action]))
+                        
+                        tutorial5 = false
+                    }
+                    
+                    if tutorial4{
+                        toolList.append(.lock)
+                        
+                        addChild(tutorialLabel)
+                        
+                        tutorialLabel.text = "Windows Only Close with Locks"
+                        tutorialLabel.fontName = "Didot Bold"
+                        tutorialLabel.fontSize = 24
+                        tutorialLabel.run(SKAction.colorize(with: UIColor.red, colorBlendFactor: 1, duration: 0))
+                        
+                        tutorialLabel.name = "label"
+                        tutorialLabel.position.x = 160
+                        tutorialLabel.position.y = 370
+                        tutorialLabel.zPosition = 5
+                    }else{
+                        addRandomTool()
+                    }
+                    
+                    removeCrack(nodeAtPoint: nodeAtPoint)
+                    
+                    removeTool()
+                    displayTools()
+                    currentTool.text = getNameOfCurrentTool()
                 }
             }else{
                 if location.y > gameBottom && location.y < gameTop{
-                    if ifPressedTwice == false{
-                        ifPressedTwice = true
-                        addChild(coolDownLabel)
-                        
-                        coolDownLabel.text = "COOLING DOWN"
-                        coolDownLabel.fontName = "Didot Bold"
-                        coolDownLabel.fontSize = 36
-                        coolDownLabel.run(SKAction.colorize(with: UIColor.red, colorBlendFactor: 0.6, duration: 0.01))
-                        
-                        coolDownLabel.name = "coolDown"
-                        coolDownLabel.position.x = 160
-                        coolDownLabel.position.y = 400
-                        coolDownLabel.zPosition = 5
-                    }
+                    /*if ifPressedTwice == false{
+                     ifPressedTwice = true
+                     addChild(coolDownLabel)
+                     
+                     coolDownLabel.text = "COOLING DOWN"
+                     coolDownLabel.fontName = "Didot Bold"
+                     coolDownLabel.fontSize = 36
+                     coolDownLabel.run(SKAction.colorize(with: UIColor.red, colorBlendFactor: 0.9, duration: 0))
+                     
+                     coolDownLabel.name = "coolDown"
+                     coolDownLabel.position.x = 160
+                     coolDownLabel.position.y = 400
+                     coolDownLabel.zPosition = 5
+                     }*/
                 }
             }
         }
@@ -570,6 +682,14 @@ class buildingScene: SKScene, SKPhysicsContactDelegate {
         }
         
         if portal{
+            let p = portals[portalIndex]
+            
+            let wait = SKAction.wait(forDuration: 5)
+            let action = SKAction.run {
+                p.removeFromParent()
+            }
+            
+            p.run(SKAction.sequence([wait, action]))
             portals[portalIndex].start = NSDate()
             
             portals[portalIndex].physicsBody = SKPhysicsBody(rectangleOf: portals[portalIndex].size)
@@ -610,8 +730,48 @@ class buildingScene: SKScene, SKPhysicsContactDelegate {
     }
     
     override func update(_ currentTime: TimeInterval) {
-        if currentState == .tutorial && tutorialInProgress{
-            tutorial()
+        if currentState == .tutorial{
+            if tutorial1{
+                addCrack()
+                firstCrackStart = NSDate()
+                
+                self.view?.isUserInteractionEnabled = false
+                
+                tutorial2 = true
+                tutorial1 = false
+            }
+            
+            if tutorial2{
+                let end = NSDate()
+                
+                if end.timeIntervalSince(firstCrackStart as Date) > 1{
+                    
+                    dropBrick(node: cracks[0])
+                    
+                    addChild(tutorialLabel)
+                    
+                    tutorialLabel.text = "A BRICK IS FALLING"
+                    tutorialLabel.fontName = "Didot Bold"
+                    tutorialLabel.fontSize = 28
+                    tutorialLabel.run(SKAction.colorize(with: UIColor.red, colorBlendFactor: 1, duration: 0))
+                    
+                    tutorialLabel.name = "label"
+                    tutorialLabel.position.x = 160
+                    tutorialLabel.position.y = 370
+                    tutorialLabel.zPosition = 5
+                    
+                    let wait = SKAction.wait(forDuration: 0.3)
+                    let code = SKAction.run {
+                        self.view?.isUserInteractionEnabled = true
+                        self.scene?.view?.isPaused = true
+                        self.tutorial3 = true
+                    }
+                    
+                    run(SKAction.sequence([wait,code]))
+                    
+                    tutorial2 = false
+                }
+            }
         }else{
             if coolingDown == false{
                 coolDownLabel.removeFromParent()
@@ -622,31 +782,6 @@ class buildingScene: SKScene, SKPhysicsContactDelegate {
                 
                 shouldMovePerson()
                 
-                for portal in portals{
-                    let end = NSDate()
-                    let time = end.timeIntervalSince(portal.start as Date)
-                    
-                    if time > 5{
-                        portal.removeFromParent()
-                    }
-                }
-                /*
-                 for crack in cracks{
-                 let end = NSDate()
-                 let time: Double = end.timeIntervalSince(crack.start as Date)
-                 
-                 if time > 3.5{
-                 dropBrick(node: crack)
-                 crack.start = NSDate()
-                 }
-                 }*/
-                /*
-                 for i in 0 ... 5{
-                 let node = self.childNode(withName: "man\(i)")
-                 
-                 node?.run(SKAction.colorize(with: self.colors[i], colorBlendFactor: 1, duration: 0.01))
-                 }*/
-                
                 let end = NSDate()
                 let time = end.timeIntervalSince(crackStart as Date)
                 
@@ -654,7 +789,9 @@ class buildingScene: SKScene, SKPhysicsContactDelegate {
                     addCrack()
                     crackStart = NSDate()
                     
-                    
+                    if crackInterval > 1.25{
+                        crackInterval -= 0.1
+                    }
                 }
             }
         }
@@ -706,21 +843,37 @@ class buildingScene: SKScene, SKPhysicsContactDelegate {
     }
     
     func tutorial() {
-        tutorialInProgress = false
-        addCrack()
+        let crack = Crack()
+        addChild(crack)
+        
+        crack.zPosition = 1
+        crack.name = "crack"
+        crack.position.x = 150
+        crack.position.y = 350
+        
+        cracks.append(crack)
+        cracksPositon.append(crack.position)
+        
+        crack.run(SKAction.colorize(with: UIColor.black, colorBlendFactor: 3, duration: 0))
         
         let tapCrackToRemove: SKLabelNode = SKLabelNode()
-        addChild(tapCrackToRemove)
+        crack.addChild(tapCrackToRemove)
         
-        for crack in cracks{
-            tapCrackToRemove.text = "Tap Crack To Remove"
-            tapCrackToRemove.fontSize = 20
-            tapCrackToRemove.zPosition = 4
-            tapCrackToRemove.position.x = crack.position.x
-            tapCrackToRemove.position.y = crack.position.y + 25
-            tapCrackToRemove.run(SKAction.colorize(with: UIColor.blue, colorBlendFactor: 1, duration: 0.1))
-        }
+        tapCrackToRemove.text = "Tap Crack To Remove"
+        tapCrackToRemove.name = "someText"
+        tapCrackToRemove.fontSize = 24
+        tapCrackToRemove.zPosition = 4
+        tapCrackToRemove.position.x = 0
+        tapCrackToRemove.position.y = 25
+        tapCrackToRemove.run(SKAction.colorize(with: UIColor.green, colorBlendFactor: 1, duration: 0))
+    }
+    
+    func endTutorial(){
+        currentState = .playing
         
+        let userDefaults = UserDefaults.standard
+        userDefaults.set(true, forKey: "tutorialCompelted")
+        userDefaults.synchronize()
     }
     
     func shouldMovePerson() {
@@ -751,6 +904,8 @@ class buildingScene: SKScene, SKPhysicsContactDelegate {
         crack.xScale = 1
         crack.yScale = 1
         
+        cracks.append(crack)
+        
         var randPosition = randCrackPosition(crack: crack)
         
         while randPosition.x == 1000 || randPosition.y == 1000 {
@@ -767,7 +922,9 @@ class buildingScene: SKScene, SKPhysicsContactDelegate {
         
         crack.run(SKAction.repeatForever(SKAction.sequence([SKAction.wait(forDuration: 3.5),
                                                             SKAction.run {
-                                                                self.dropBrick(node: crack)
+                                                                if self.currentState == .playing{
+                                                                    self.dropBrick(node: crack)
+                                                                }
             }])))
         
         cracks.append(crack)
@@ -802,7 +959,7 @@ class buildingScene: SKScene, SKPhysicsContactDelegate {
     func removeCrack(nodeAtPoint: SKNode) {
         let index = cracks.index(of: nodeAtPoint as! Crack)!
         cracks.remove(at: index)
-        cracksPositon.remove(at: index)
+        //       cracksPositon.remove(at: index)
         
         let crackRemoval = SKAction.run ({
             nodeAtPoint.removeFromParent()
@@ -848,6 +1005,8 @@ class buildingScene: SKScene, SKPhysicsContactDelegate {
             newTool = textureToNode(name: "ice")
         case .health:
             newTool = textureToNode(name: "health")
+        case .police:
+            newTool = textureToNode(name: "police")
         }
         
         newTool.size = size
@@ -871,23 +1030,31 @@ class buildingScene: SKScene, SKPhysicsContactDelegate {
             unlockedTools = userDefaults.array(forKey: "unlockedTools") as! [Bool]
         }
         
+        userDefaults.synchronize()
+        
         var i = Int(arc4random_uniform(UInt32(unlockedTools.count)))
         
         while unlockedTools[i] == false{
             i = Int(arc4random_uniform(UInt32(unlockedTools.count)))
         }
         
+        if currentState == .tutorial{
+            while i != 1 &&  i != 0{
+                i = Int(arc4random_uniform(UInt32(unlockedTools.count)))
+            }
+        }
+        
         var randTool: tools = .cement
         
         switch i {
         case 0:
-            randTool = .glue
+            randTool = .wood
         case 1:
-            randTool = .cement
+            randTool = .glue
         case 2:
             randTool = .tape
         case 3:
-            randTool = .wood
+            randTool = .cement
         case 4:
             randTool = .lock
             openWindow()
@@ -899,6 +1066,9 @@ class buildingScene: SKScene, SKPhysicsContactDelegate {
             randTool = .health
         case 8:
             randTool = .wall
+        case 9:
+            randTool = .police
+            robberArrive()
         default:
             randTool = .glue
         }
@@ -944,75 +1114,108 @@ class buildingScene: SKScene, SKPhysicsContactDelegate {
         
         switch currentTool {
         case .cement:
-            duration = 0.5
+            duration = 2
         case .glue:
-            duration = 0.5
+            duration = 1.5
         case .tape:
-            duration = 0.5
+            duration = 2
         case .wood:
-            duration = 0.5
+            duration = 1.5
         case .lock:
-            duration = 0.5
+            duration = 1
         case .portal:
-            duration = 0.5
+            duration = 2
         case .wall:
-            duration = 1
+            duration = 4
         case .ice:
-            duration = 1
+            duration = 1.5
         case .health:
+            duration = 2
+        case .police:
             duration = 1
         }
+        duration = 0.5
         
         return duration
     }
     
     func coolDown() {
-        coolingDown = true
-        
-        let duration: TimeInterval = curentWaitTime()
-        let finalHeightScale: CGFloat = 0.0
-        let scaleHeightAction = SKAction.scaleX(to: finalHeightScale, duration: TimeInterval(duration))
-        let change = SKAction.run(changeWaitingState)
-        
-        waitBar.run(
-            SKAction.sequence([scaleHeightAction, change])
-        )
+        /*coolingDown = true
+         
+         let duration: TimeInterval = curentWaitTime()
+         let finalHeightScale: CGFloat = 0.0
+         let scaleHeightAction = SKAction.scaleX(to: finalHeightScale, duration: TimeInterval(duration))
+         let change = SKAction.run(changeWaitingState)
+         
+         waitBar.run(
+         SKAction.sequence([scaleHeightAction, change])
+         )*/
     }
     
     func gameOver() {
+        
         currentState = .notPlaying
         
-        returnButton.isHidden = false
+        retryButton.isHidden = false
+        homeButton.isHidden = false
         
-        returnButton.selectedHandler = {
-            let skView = self.view as SKView!
+        retryButton.selectedHandler = { [weak self] in
+            print(1)
+            
+            let skView = self?.view as SKView!
+            
+            guard let scene = GameScene(fileNamed:"buildingScene") as GameScene! else { return }
+            
+            scene.scaleMode = .aspectFill
+            skView?.presentScene(scene)
+        }
+        
+        homeButton.selectedHandler = { [weak self] in
+            print(2)
+            
+            let skView = self?.view as SKView!
             
             guard let scene = GameScene(fileNamed:"buildingsMenu") as GameScene! else { return }
             
             scene.scaleMode = .aspectFill
             skView?.presentScene(scene)
         }
+
         
         windowsPosition.removeAll()
         
-        let background = SKSpriteNode()
+        var background = SKSpriteNode()
+        var texture = SKTexture(imageNamed: "backgroundPopUp")
+        background = SKSpriteNode(texture: texture)
+        
         addChild(background)
         
         background.size.height = 300
-        background.size.width = 310
+        background.size.width = 305
         background.position.x = 160
-        background.position.y = 320
+        background.position.y = 335
         background.zPosition = 5
-        background.color = UIColor.purple
         
-        let texture = SKTexture(imageNamed: "gameOver")
+        texture = SKTexture(imageNamed: "border")
+        let border = SKSpriteNode(texture: texture)
+        
+        addChild(border)
+        
+        border.size.height = 310
+        border.size.width = 310
+        border.position.x = 160
+        border.position.y = 335
+        //border.zRotation = 90
+        border.zPosition = 6
+        
+        texture = SKTexture(imageNamed: "gameOver")
         let gameOverLabel = SKSpriteNode(texture: texture)
         addChild(gameOverLabel)
         
         gameOverLabel.size.height = 58
-        gameOverLabel.size.width = 310
+        gameOverLabel.size.width = 275
         gameOverLabel.position.x = 160
-        gameOverLabel.position.y = 450
+        gameOverLabel.position.y = 440
         gameOverLabel.zPosition = 6
         
         let finalMoney = SKLabelNode()
@@ -1023,7 +1226,7 @@ class buildingScene: SKScene, SKPhysicsContactDelegate {
         finalMoney.fontSize = 25
         
         finalMoney.position = gameOverLabel.position
-        finalMoney.position.y -= 75
+        finalMoney.position.y -= 80
         finalMoney.zPosition = 6
         finalMoney.color = UIColor.green
         
@@ -1035,7 +1238,7 @@ class buildingScene: SKScene, SKPhysicsContactDelegate {
         cracksRemoved.fontSize = 20
         
         cracksRemoved.position = finalMoney.position
-        cracksRemoved.position.y -= 75
+        cracksRemoved.position.y -= 80
         cracksRemoved.zPosition = 6
         cracksRemoved.color = UIColor.orange
         
@@ -1086,6 +1289,8 @@ class buildingScene: SKScene, SKPhysicsContactDelegate {
             name = "ice"
         case .health:
             name = "health"
+        case .police:
+            name = "police"
         }
         
         return name
@@ -1094,7 +1299,7 @@ class buildingScene: SKScene, SKPhysicsContactDelegate {
     func openWindow() {
         var num = Int(arc4random_uniform(UInt32(buildingMenu.numberWindows)))
         
-        while windowsPosition.contains(num){
+        while windowsPosition.contains(num) || num == prevoiusWindowOpened{
             num = Int(arc4random_uniform(UInt32(buildingMenu.numberWindows)))
         }
         
@@ -1126,6 +1331,8 @@ class buildingScene: SKScene, SKPhysicsContactDelegate {
                                                           SKAction.run {
                                                             self.dropTooth(node: man, num: num)
             }])))
+        
+        prevoiusWindowOpened = num
     }
     
     func dropBrick(node: SKSpriteNode) {
@@ -1177,7 +1384,7 @@ class buildingScene: SKScene, SKPhysicsContactDelegate {
         tooth.physicsBody?.collisionBitMask = 3
     }
     
-    func addText(node: SKSpriteNode, t: String) {
+    func addText(node: SKSpriteNode, t: String, color: UIColor) {
         let textLabel: SKLabelNode = SKLabelNode()
         addChild(textLabel)
         
@@ -1187,7 +1394,7 @@ class buildingScene: SKScene, SKPhysicsContactDelegate {
         textLabel.position.x = node.position.x
         textLabel.position.y = node.position.y + 75
         textLabel.zPosition = 3
-        textLabel.run(SKAction.colorize(with: UIColor.green, colorBlendFactor: 1, duration: 0.1))
+        textLabel.run(SKAction.colorize(with: color, colorBlendFactor: 1, duration: 0.1))
         
         let wait = SKAction.wait(forDuration: 3)
         let code = SKAction.run {
@@ -1216,7 +1423,7 @@ class buildingScene: SKScene, SKPhysicsContactDelegate {
             
             let time: TimeInterval = 1
             
-            if node.timesHit >= 4{
+            if node.timesHit >= 3{
                 var f = 10
                 var l = 10
                 var needsToMove = true
@@ -1309,12 +1516,12 @@ class buildingScene: SKScene, SKPhysicsContactDelegate {
                 
                 peopleLeft += 1
                 
-                if peopleLeft > 4{
+                if peopleLeft > 2{
                     gameOver()
                 }
             }else{
                 node.timesHit += 1
-                node.run(SKAction.colorize(with: UIColor.red, colorBlendFactor: node.colorBlendFactor + 0.25, duration: 0.1))
+                node.run(SKAction.colorize(with: UIColor.red, colorBlendFactor: node.colorBlendFactor + 0.33, duration: 0.1))
             }
             previousNode = something
         }
@@ -1329,7 +1536,7 @@ class buildingScene: SKScene, SKPhysicsContactDelegate {
     
     func openDoorClose(man: SKSpriteNode) {
         let door: SKSpriteNode = childNode(withName: "door") as! SKSpriteNode
-        let open = textureToNode(name: "openDoor")
+        let open = textureToNode(name: "doorOpen")
         
         addChild(open)
         
@@ -1345,13 +1552,31 @@ class buildingScene: SKScene, SKPhysicsContactDelegate {
                                         let node: Man = man as! Man
                                         let moneyLost = 100 - (node.timesHit * 25)
                                         self.moneyCollected += moneyLost
-                                        self.addText(node: man, t: "+\(moneyLost)")
+                                        self.addText(node: man, t: "+\(moneyLost)", color: UIColor.green)
                                         
                                         self.manMovingInside = false
             }]))
     }
     
     func movePersonInside(movingMan: CGPoint) {
+        
+        var moveTime = 0.5
+        
+        /*if !tutorialInProgress{
+         moveTime = 1
+         
+         addChild(tutorialLabel)
+         
+         tutorialLabel.text = "SOMEONE IS MOVING"
+         tutorialLabel.fontName = "Didot Bold"
+         tutorialLabel.fontSize = 24
+         tutorialLabel.run(SKAction.colorize(with: UIColor.red, colorBlendFactor: 1, duration: 0))
+         
+         tutorialLabel.name = "label"
+         tutorialLabel.position.x = 160
+         tutorialLabel.position.y = 400
+         tutorialLabel.zPosition = 5
+         }*/
         
         let node: [SKSpriteNode] = nodes(at: movingMan) as! [SKSpriteNode]
         var left = false
@@ -1366,7 +1591,7 @@ class buildingScene: SKScene, SKPhysicsContactDelegate {
                 man.name = "person"
                 
                 man.run(SKAction.colorize(with: UIColor.green, colorBlendFactor: 1, duration: 0.1))
-                man.run(SKAction.sequence([SKAction.moveTo(x: 160, duration: 0.5),
+                man.run(SKAction.sequence([SKAction.moveTo(x: 160, duration: moveTime),
                                            SKAction.run {
                                             self.openDoorClose(man: man)
                                             
@@ -1377,17 +1602,20 @@ class buildingScene: SKScene, SKPhysicsContactDelegate {
                                                 let man2: SKSpriteNode = self.childNode(withName: "man1") as! SKSpriteNode
                                                 man.name = "man1"
                                                 man2.name = "man2"
-                                                man.run(SKAction.moveTo(x: self.manPositionX[1], duration: 0.5))
-                                                man2.run(SKAction.moveTo(x: self.manPositionX[2], duration: 0.5))
+                                                man.run(SKAction.moveTo(x: self.manPositionX[1], duration: moveTime))
+                                                man2.run(SKAction.moveTo(x: self.manPositionX[2], duration: moveTime))
                                             }else{
                                                 //self.moveAllPeople(s: left, first: 4, second: 5)
                                                 let man: SKSpriteNode = self.childNode(withName: "man4") as! SKSpriteNode
                                                 let man2: SKSpriteNode = self.childNode(withName: "man5") as! SKSpriteNode
                                                 man.name = "man3"
                                                 man2.name = "man4"
-                                                man.run(SKAction.moveTo(x: self.manPositionX[3], duration: 0.5))
-                                                man2.run(SKAction.moveTo(x: self.manPositionX[4], duration: 0.5))
+                                                man.run(SKAction.moveTo(x: self.manPositionX[3], duration: moveTime))
+                                                man2.run(SKAction.moveTo(x: self.manPositionX[4], duration: moveTime))
                                             }
+                                            /*if !self.tutorialInProgress{
+                                             self.tutorialLabel.removeFromParent()
+                                             }*/
                                             
                                             self.moveNewPerson(location: movingMan)
                     }]))
@@ -1395,33 +1623,6 @@ class buildingScene: SKScene, SKPhysicsContactDelegate {
         }
         
     }
-    /*
-     func moveAllPeople(s: Bool, first: Int, second: Int) {
-     if s{
-     for i in first ... second{
-     let man: SKSpriteNode = childNode(withName: "man\(i)") as! SKSpriteNode
-     
-     man.name = "man\(i+1)"
-     men[i+1] = 1
-     
-     man.run(SKAction.moveTo(x: manPositionX[i+1], duration: 0.5))
-     }
-     }else{
-     for i in first ... second{
-     let man: SKSpriteNode = childNode(withName: "man\(i)") as! SKSpriteNode
-     man.name = "man\(i-1)"
-     men[i-1] = 1
-     
-     man.run(SKAction.moveTo(x: manPositionX[i-1], duration: 0.5))
-     }
-     }
-     
-     for i in 0 ... 5{
-     let node = childNode(withName: "man\(i)")
-     
-     node?.run(SKAction.colorize(with: colors[i], colorBlendFactor: 1, duration: 0.01))
-     }
-     }*/
     
     func moveNewPerson(location: CGPoint) {
         let man = Man()
@@ -1502,6 +1703,39 @@ class buildingScene: SKScene, SKPhysicsContactDelegate {
         
         old.run(SKAction.repeatForever(SKAction.sequence([wait,
                                                           drop])))
+    }
+    
+    func robberArrive(){
+        let robber = textureToNode(name: "robber")
+        addChild(robber)
+        
+        robber.zPosition = 4
+        robber.position.y = 58
+        robber.name = "robber"
+        
+        let rand = arc4random_uniform(100)
+        
+        if rand < 50{
+            robber.position.x = -12.5
+        }else{
+            robber.position.x = 332.5
+        }
+        
+        let action = SKAction.run {
+            var robbedMoney = 200
+            
+            if self.moneyCollected < 200{
+                robbedMoney = self.moneyCollected
+            }
+            
+            self.addText(node: robber, t: "-\(robbedMoney)", color: UIColor.red)
+            
+            self.moneyCollected -= robbedMoney
+            robber.removeFromParent()
+        }
+        
+        robber.run(SKAction.sequence([SKAction.moveTo(x: 160, duration: 5), action]))
+        
     }
     
 }

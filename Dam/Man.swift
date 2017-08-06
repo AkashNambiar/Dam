@@ -14,7 +14,7 @@ class Man: SKSpriteNode{
     
     init() {
     // Make a texture from an image, a color, and size
-    let texture = SKTexture(imageNamed: "man")
+    let texture = SKTexture(imageNamed: "manWithout")
     let color = UIColor.clear
     let size = texture.size()
     

@@ -6,6 +6,8 @@
 //  Copyright © 2017 Akash Nambiar. All rights reserved.
 //
 
+//Right side only moves insde
+
 import SpriteKit
 
 class toolsMenu: SKScene {
@@ -13,24 +15,26 @@ class toolsMenu: SKScene {
     var backButton: MSButtonNode!
     var cancelButton: MSButtonNode!
     var confirmButton: MSButtonNode!
-    let popUp = SKSpriteNode()
+    var popUp = SKSpriteNode()
     var priceToBuy: SKLabelNode!
     var warningLabel: SKLabelNode!
+    var totalMoney: SKLabelNode!
     
-    let unlockedToolsName: [String] = ["wood", "glue", "tape", "cement", "lock", "portal" , "ice", "health", "wall"]
-    static var unlocked: [Bool] = [true, true, true, false, true, false, false, false, false]
-    var emptyArray: [Bool] = []
-    var toolPrice: [Int] = [0,0,0,1000,0,4000,2000, 5000, 10000]
+    static let unlockedToolsName: [String] = ["wood", "glue", "tape", "cement", "lock", "portal" , "ice", "health", "wall", "police"]
+    static let coolingTimes: [TimeInterval] = [1.5,1.5,2,2,1,2,1.5,2,4,1]
+    static var unlocked: [Bool] = [true, true, false, false, true, false, false, false, false, false]
+    var toolPrice: [Int] = [0,0,500,1000,0,4000,2000, 5000, 10000,6300]
     
     var canSwipe = true
-    let swipeMove: CGFloat = 60
+    var poppingUp = false
+    let swipeMove: CGFloat = 115
     
     static var getTool = "tool"
     
     override func didMove(to view: SKView) {
         
         let userDefaults = UserDefaults.standard
-        let firstTime: [Bool] = userDefaults.array(forKey: "unlockedTools") as? [Bool] ?? emptyArray
+        let firstTime: [Bool] = userDefaults.array(forKey: "unlockedTools") as? [Bool] ?? []
         
         if firstTime.count == 0{
             print("firstTime")
@@ -43,24 +47,27 @@ class toolsMenu: SKScene {
         confirmButton = childNode(withName: "confirmButton") as! MSButtonNode
         priceToBuy = childNode(withName: "priceLabel") as! SKLabelNode
         warningLabel = childNode(withName: "warningLabel") as! SKLabelNode
+        totalMoney = childNode(withName: "totalMoney") as! SKLabelNode
         
         priceToBuy.isHidden = true
         confirmButton.isHidden = true
         cancelButton.isHidden = true
         warningLabel.isHidden = true
         
-        backButton.selectedHandler = {
-            guard let skView = self.view as SKView! else{
-                print("Could not get Skview")
-                return
+        backButton.selectedHandler = { [weak self] in
+            if !(self?.poppingUp)!{ 
+                guard let skView = self?.view as SKView! else{
+                    print("Could not get Skview")
+                    return
+                }
+                
+                guard let scene = GameScene(fileNamed: "buildingsMenu") else {
+                    return
+                }
+                scene.scaleMode = .aspectFit
+                
+                skView.presentScene(scene)
             }
-            
-            guard let scene = GameScene(fileNamed: "buildingsMenu") else {
-                return
-            }
-            scene.scaleMode = .aspectFit
-            
-            skView.presentScene(scene)
         }
         
         let swipeDown = UISwipeGestureRecognizer(target: self, action: #selector(self.respondToSwipeGesture))
@@ -73,6 +80,8 @@ class toolsMenu: SKScene {
         
         updateTools(opacity: 0.4, b: false)
         
+        totalMoney.text = "\(userDefaults.integer(forKey: "money"))"
+        userDefaults.synchronize()
     }
     
     func updateTools(opacity: CGFloat, b: Bool) {
@@ -83,7 +92,7 @@ class toolsMenu: SKScene {
         
         for i in 0 ... unlockedTools.count - 1{
             if unlockedTools[i] == b{
-                let name = unlockedToolsName[i]
+                let name = toolsMenu.unlockedToolsName[i]
                 
                 var node = swipe.childNode(withName: "\(name)")
                 node?.alpha = opacity
@@ -102,6 +111,9 @@ class toolsMenu: SKScene {
     }
     
     func respondToSwipeGesture(gesture: UIGestureRecognizer) {
+        
+        if poppingUp {return}
+        
         if canSwipe{
             if let swipeGesture = gesture as? UISwipeGestureRecognizer {
                 
@@ -110,15 +122,15 @@ class toolsMenu: SKScene {
                 
                 switch swipeGesture.direction {
                 case UISwipeGestureRecognizerDirection.down:
-                    if 170 - swipeMove < swipe.position.y{
-                        swipe.run(SKAction.moveBy(x: 0, y: 170 - swipe.position.y, duration: timeSwipe))
+                    if 175 + swipeMove > swipe.position.y{
+                        swipe.run(SKAction.moveBy(x: 0, y: 175 - swipe.position.y, duration: timeSwipe))
                     }else{
                         swipe.run(SKAction.moveBy(x: 0, y: -swipeMove, duration: timeSwipe))
                     }
                     
                 case UISwipeGestureRecognizerDirection.up:
-                    if 400 - swipeMove < swipe.position.y{
-                        swipe.run(SKAction.moveBy(x: 0, y: 400 - swipe.position.y, duration: timeSwipe))
+                    if 383 - swipeMove < swipe.position.y{
+                        swipe.run(SKAction.moveBy(x: 0, y: 383 - swipe.position.y, duration: timeSwipe))
                     }else{
                         swipe.run(SKAction.moveBy(x: 0, y: swipeMove, duration: timeSwipe))
                     }
@@ -130,7 +142,23 @@ class toolsMenu: SKScene {
         }
     }
     
+    /*override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
+        let swipe: SKSpriteNode = childNode(withName: "swipeScreen") as! SKSpriteNode
+        
+        for touch in touches {
+            let location = touch.location(in: self)
+            let previousLocation = touch.previousLocation(in: self)
+            
+            let deltaY = previousLocation.y - location.y
+            
+            swipe.position.y += deltaY
+        }
+    }*/
+    
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+        
+        if poppingUp {return}
+        
         let touch = touches.first!
         let location = touch.location(in: self)
         let nodeAtPoint = atPoint(location)
@@ -151,7 +179,14 @@ class toolsMenu: SKScene {
                 toolsMenu.getTool = "lock"
             }else if (nodeName?.hasPrefix("portal"))!{
                 toolsMenu.getTool = "portal"
+            }else if (nodeName?.hasPrefix("health"))!{
+                toolsMenu.getTool = "health"
+            }else if (nodeName?.hasPrefix("wall"))!{
+                toolsMenu.getTool = "wall"
+            }else if (nodeName?.hasPrefix("police"))!{
+                toolsMenu.getTool = "police"
             }
+            
             guard let skView = self.view as SKView! else{
                 print("Could not get Skview")
                 return
@@ -166,9 +201,9 @@ class toolsMenu: SKScene {
             skView.presentScene(scene)
         }
         
-        if unlockedToolsName.contains(nodeName!) {
+        if toolsMenu.unlockedToolsName.contains(nodeName!) {
             
-            let index = unlockedToolsName.index(of: nodeName!)
+            let index = toolsMenu.unlockedToolsName.index(of: nodeName!)
             
             let userDefaults = UserDefaults.standard
             var unlockedTools = userDefaults.array(forKey: "unlockedTools") as! [Bool]
@@ -183,6 +218,9 @@ class toolsMenu: SKScene {
                 
                 priceToBuy.text = "Buy For \(price)"
                 
+                let texture = SKTexture(imageNamed: "popUp")
+                popUp = SKSpriteNode(texture: texture)
+                
                 addChild(popUp)
                 
                 popUp.name = "popUp"
@@ -191,9 +229,9 @@ class toolsMenu: SKScene {
                 popUp.position.x = 160
                 popUp.position.y = 300
                 popUp.zPosition = 9
-                popUp.color = UIColor.green
-                
+
                 canSwipe = false
+                poppingUp = true
                 
                 if price > userDefaults.integer(forKey: "money"){
                     warningLabel.isHidden = false
@@ -207,6 +245,7 @@ class toolsMenu: SKScene {
                     self.priceToBuy.isHidden = true
                     self.warningLabel.isHidden = true
                     self.canSwipe = true
+                    self.poppingUp = false
                 }
                 
                 confirmButton.selectedHandler = {
@@ -216,6 +255,7 @@ class toolsMenu: SKScene {
                     self.priceToBuy.isHidden = true
                     self.warningLabel.isHidden = true
                     self.canSwipe = true
+                    self.poppingUp = false
                     
                     userDefaults.set(userDefaults.integer(forKey: "money") - price, forKey: "money")
                     userDefaults.synchronize()
@@ -224,6 +264,9 @@ class toolsMenu: SKScene {
                     unlockedTools[index!] = true
                     
                     userDefaults.set(unlockedTools, forKey: "unlockedTools")
+                    
+                    self.totalMoney.text = "\(userDefaults.integer(forKey: "money"))"
+
                     userDefaults.synchronize()
                     
                     self.updateTools(opacity: 1, b: true)

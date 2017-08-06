@@ -12,7 +12,7 @@ class Window: SKSpriteNode {
     
     init() {
         // Make a texture from an image, a color, and size
-        let texture = SKTexture(imageNamed: "openWindow")
+        let texture = SKTexture(imageNamed: "windowOpen")
         let color = UIColor.clear
         let size = texture.size()
         
