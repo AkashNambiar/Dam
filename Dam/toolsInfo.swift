@@ -13,14 +13,9 @@ class toolsInfo: SKScene {
     var toolName: SKLabelNode!
     var backButton: MSButtonNode!
     
-    var areaRemoval: SKSpriteNode!
-    var crackRemoval: SKSpriteNode!
-    var windowCloser: SKSpriteNode!
-    var text1: SKLabelNode!
-    var text2: SKLabelNode!
-    var text3: SKLabelNode!
-    var coolTime: SKLabelNode!
-
+    var first: SKSpriteNode!
+    var second: SKSpriteNode!
+    
     override func didMove(to view: SKView) {
         
         let currentTool = toolsMenu.getTool
@@ -28,17 +23,12 @@ class toolsInfo: SKScene {
         toolName = childNode(withName: "toolName") as! SKLabelNode
         backButton = childNode(withName: "//backButton") as! MSButtonNode
         
-        areaRemoval = childNode(withName: "areaRemoval") as! SKSpriteNode
-        crackRemoval = childNode(withName: "crackRemoval") as! SKSpriteNode
-        windowCloser = childNode(withName: "windowCloser") as! SKSpriteNode
-        text1 = childNode(withName: "text1") as! SKLabelNode
-        text2 = childNode(withName: "text2") as! SKLabelNode
-        text3 = childNode(withName: "text3") as! SKLabelNode
-        coolTime = childNode(withName: "coolTime") as! SKLabelNode
+        first = childNode(withName: "first") as! SKSpriteNode
+        second = childNode(withName: "second") as! SKSpriteNode
         
         toolName.text = currentTool
         
-        let texture = SKTexture(imageNamed: currentTool)
+        var texture = SKTexture(imageNamed: currentTool)
         let node = SKSpriteNode(texture: texture)
         
         addChild(node)
@@ -49,54 +39,97 @@ class toolsInfo: SKScene {
         node.zPosition = 1
         
         if currentTool == "cement"{
-            areaRemoval.color = UIColor.green
-            crackRemoval.color = UIColor.green
+            second.texture = SKTexture(imageNamed: "areaRemoval")
         }else if currentTool == "glue"{
-            crackRemoval.color = UIColor.green
+            
         }else if currentTool == "wood"{
-            crackRemoval.color = UIColor.green
+            
         }else if currentTool == "tape"{
-            areaRemoval.color = UIColor.green
-            crackRemoval.color = UIColor.green
+            second.texture = SKTexture(imageNamed: "areaRemoval")
         }else if currentTool == "lock"{
-            windowCloser.color = UIColor.green
-        }else if currentTool == "wall"{
-            areaRemoval.color = UIColor.green
-            crackRemoval.color = UIColor.green
-        }else if currentTool == "portal"{
-            text1.text = "Falling Items Removal"
-            text1.fontSize = 26
-            text1.position.x += 10
-            text2.text = "Lasting Effect"
-            text3.text = "Heal People"
-            areaRemoval.color = UIColor.green
-            crackRemoval.color = UIColor.green
-        }else if currentTool == "health"{
-            text1.text = "Falling Items Removal"
-            text1.fontSize = 28
-            text1.position.x += 10
-            text2.text = "Lasting Effect"
-            text3.text = "Heal People"
-            windowCloser.color = UIColor.green
-        }else if currentTool == "ice"{
-            text1.text = "Falling Items Removal"
-            text1.fontSize = 28
-            text1.position.x += 10
-            text2.text = "Lasting Effect"
-            text3.text = "Heal People"
-            crackRemoval.color = UIColor.green
-        }else if currentTool == "police"{
-            text1.text = "Stops Robbers"
-            text2.text = "Lasting Effect"
-            text3.text = "Heal People"
-            areaRemoval.color = UIColor.green
+            first.texture = SKTexture(imageNamed: "closeWindow")
+            second.isHidden = true
+            
+            texture = SKTexture(imageNamed: "w")
+            let window = SKSpriteNode(texture: texture)
+            addChild(window)
+            
+            window.size.height = 90
+            window.size.width = 90
+            window.position.x = 160
+            window.position.y = 185
+            
+            let action = SKAction.run{
+                let w = Window()
+                self.addChild(w)
+                
+                w.position = window.position
+                w.size = window.size
+                w.zPosition = 1
+                
+                texture = SKTexture(imageNamed: "windowMan")
+                let man = SKSpriteNode(texture: texture)
+                self.addChild(man)
+                
+                man.zPosition = 2
+                man.position.x = 160
+                man.position.y = 180
+                man.xScale = 0.4
+                man.yScale = 0.4
 
-            crackRemoval.color = UIColor.green
+                man.run(SKAction.sequence([SKAction.wait(forDuration: 1), SKAction.run{
+                    man.removeFromParent()
+                    w.removeFromParent()
+                    }])
+                   )
+            }
+            
+            run(SKAction.repeatForever(SKAction.sequence([SKAction.wait(forDuration: 2), action])))
+            
+        }else if currentTool == "wall"{
+            second.texture = SKTexture(imageNamed: "areaRemoval")
+        }else if currentTool == "portal"{
+            first.texture = SKTexture(imageNamed: "stopBricks")
+            second.texture = SKTexture(imageNamed: "5seconds")
+        }else if currentTool == "health"{
+            first.texture = SKTexture(imageNamed: "healsCustomers")
+            second.isHidden = true
+            
+            let man = Man()
+            addChild(man)
+            
+            man.position.x = 160
+            man.position.y = 165
+            
+            texture = SKTexture(imageNamed: "faceWithNeck")
+            let face = SKSpriteNode(texture: texture)
+            man.addChild(face)
+            face.zPosition = 1
+            face.position.x = 2
+            face.position.y = 84
+            
+            face.run( SKAction.repeatForever(SKAction.sequence([SKAction.colorize(with: UIColor.red, colorBlendFactor: 0.9, duration: 1), SKAction.wait(forDuration: 0.1), SKAction.colorize(with: UIColor.red, colorBlendFactor: 0, duration: 1), SKAction.wait(forDuration: 0.1)])))
+            
+        }else if currentTool == "ice"{
+            first.texture = SKTexture(imageNamed: "tempStop")
+            second.texture = SKTexture(imageNamed: "5seconds")
+            
+            let crack = Crack()
+            addChild(crack)
+            
+            crack.position.x = 160
+            crack.position.y = 170
+            crack.zPosition = 1
+            crack.xScale = 2
+            crack.yScale = 2
+            
+            let s = SKAction.sequence([SKAction.colorize(with: UIColor.black, colorBlendFactor: 3, duration: 0), SKAction.wait(forDuration: 1), SKAction.colorize(with: UIColor.cyan, colorBlendFactor: 1, duration: 0), SKAction.wait(forDuration: 2)])
+            
+            crack.run(SKAction.repeatForever(SKAction.sequence([s])))
+            
+        }else if currentTool == "police"{
+            
         }
-        
-        let index = toolsMenu.unlockedToolsName.index(of: currentTool)
-        let time = toolsMenu.coolingTimes[index!]
-        coolTime.text = "Cool Down Time: \(time)"
         
         backButton.selectedHandler = { [weak self] in
             guard let skView = self?.view as SKView! else{
@@ -110,7 +143,7 @@ class toolsInfo: SKScene {
             scene.scaleMode = .aspectFit
             
             skView.presentScene(scene)
-
+            
         }
     }
 }

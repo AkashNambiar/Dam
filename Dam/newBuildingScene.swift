@@ -12,6 +12,7 @@ import SpriteKit
 import Foundation
 import Fabric
 import Crashlytics
+import AVFoundation
 
 class newBuildingScene: SKScene, SKPhysicsContactDelegate {
     
@@ -116,7 +117,22 @@ class newBuildingScene: SKScene, SKPhysicsContactDelegate {
     
     var canPressButton = true
     
+    var music: AVAudioPlayer!
+    
     override func didMove(to view: SKView) {
+        let path = Bundle.main.path(forResource: "titleScreen.mp3", ofType:nil)!
+        let url = URL(fileURLWithPath: path)
+        
+        do {
+            let sound = try AVAudioPlayer(contentsOf: url)
+            music = sound
+            music.numberOfLoops = -1
+            sound.play()
+        } catch {
+            // couldn't load file :(
+        }
+
+        MainMenu.musicPlayer.stop()
         
         currentTool = childNode(withName: "currentTool") as! SKLabelNode
         b1 = childNode(withName: "b1") as! SKSpriteNode
@@ -139,7 +155,7 @@ class newBuildingScene: SKScene, SKPhysicsContactDelegate {
             self?.goHome.isHidden = true
             
             var background = SKSpriteNode()
-            let texture = SKTexture(imageNamed: "popUp")
+            var texture = SKTexture(imageNamed: "popUp")
             background = SKSpriteNode(texture: texture)
             
             self?.addChild(background)
@@ -151,29 +167,27 @@ class newBuildingScene: SKScene, SKPhysicsContactDelegate {
             background.position.y = 335
             background.zPosition = 5
             
-            let finalMoney = SKLabelNode(fontNamed: "Georgia")
-            self?.addChild(finalMoney)
-            
-            finalMoney.name = "fehvsj"
-            finalMoney.text = "Are you sure?"
-            finalMoney.fontSize = 25
-            
-            finalMoney.position.x = 160
-            finalMoney.position.y = 400
-            finalMoney.zPosition = 6
-            finalMoney.color = UIColor.green
-            
-            let cracksRemoved = SKLabelNode(fontNamed: "Georgia")
+            texture = SKTexture(imageNamed: "areYou")
+            let cracksRemoved = SKSpriteNode(texture: texture)
             self?.addChild(cracksRemoved)
             
             cracksRemoved.name = "fehvsj"
-            cracksRemoved.text = "Money Collected Will Be Lost"
-            cracksRemoved.fontSize = 20
-            
             cracksRemoved.position.x = 160
-            cracksRemoved.position.y = 325
+            cracksRemoved.position.y = 400
+            cracksRemoved.xScale = 0.9
+            cracksRemoved.yScale = 0.9
             cracksRemoved.zPosition = 6
-            cracksRemoved.color = UIColor.orange
+            
+            texture = SKTexture(imageNamed: "moneyCollected")
+            let finalMoney = SKSpriteNode(texture: texture)
+            self?.addChild(finalMoney)
+            
+            finalMoney.name = "fehvsj"
+            finalMoney.xScale = 0.55
+            finalMoney.yScale = 0.55
+            finalMoney.position.x = 160
+            finalMoney.position.y = 325
+            finalMoney.zPosition = 6
             
             self?.retryButton.isHidden = false
             self?.homeButton.isHidden = false
@@ -206,6 +220,28 @@ class newBuildingScene: SKScene, SKPhysicsContactDelegate {
             }
             
             self?.homeButton.selectedHandler = { [weak self] in
+                Answers.logLevelEnd("\(buildingMenu.buildingName)",
+                    score: 0,
+                    success: false,
+                    customAttributes: [
+                        "Money Collected": 0
+                    ])
+             
+                let path = Bundle.main.path(forResource: "SummerSunday.wav", ofType:nil)!
+                let url = URL(fileURLWithPath: path)
+                
+                do {
+                    let sound = try AVAudioPlayer(contentsOf: url)
+                    MainMenu.musicPlayer = sound
+                    sound.play()
+                    MainMenu.musicPlayer.numberOfLoops = -1
+                    soundIsPlaying = true
+                } catch {
+                    // couldn't load file :(
+                }
+
+                self?.music.stop()
+                
                 let skView = self?.view as SKView!
                 
                 guard let scene = GameScene(fileNamed:"buildingsMenu") as GameScene! else { return }
@@ -1337,6 +1373,21 @@ class newBuildingScene: SKScene, SKPhysicsContactDelegate {
                                 "Money Collected": moneyCollected
             ])
         
+        let path = Bundle.main.path(forResource: "SummerSunday.wav", ofType:nil)!
+        let url = URL(fileURLWithPath: path)
+        
+        do {
+            let sound = try AVAudioPlayer(contentsOf: url)
+            MainMenu.musicPlayer = sound
+            sound.play()
+            MainMenu.musicPlayer.numberOfLoops = -1
+            soundIsPlaying = true
+        } catch {
+            // couldn't load file :(
+        }
+        
+        music.stop()
+        
         currentState = .notPlaying
         
         retryButton.isHidden = false
@@ -1683,6 +1734,8 @@ class newBuildingScene: SKScene, SKPhysicsContactDelegate {
                     node.name = "left"
                     moveNewPerson(location: node.position)
                 }
+                
+                run(SKAction.playSoundFileNamed("flee", waitForCompletion: false))
                 
                 //node.run(SKAction.colorize(with: UIColor.cyan, colorBlendFactor: 1, duration: 0.1))
                 

@@ -10,6 +10,8 @@
 
 import SpriteKit
 
+var lastPosition: CGFloat = 0
+
 class toolsMenu: SKScene {
     
     var backButton: MSButtonNode!
@@ -27,7 +29,7 @@ class toolsMenu: SKScene {
     
     var canSwipe = true
     var poppingUp = false
-    let swipeMove: CGFloat = 115
+    let swipeMove: CGFloat = 140
     
     static var getTool = "tool"
     
@@ -55,7 +57,7 @@ class toolsMenu: SKScene {
         warningLabel.isHidden = true
         
         backButton.selectedHandler = { [weak self] in
-            if !(self?.poppingUp)!{ 
+            if !(self?.poppingUp)!{
                 guard let skView = self?.view as SKView! else{
                     print("Could not get Skview")
                     return
@@ -78,33 +80,41 @@ class toolsMenu: SKScene {
         swipeUp.direction = UISwipeGestureRecognizerDirection.up
         self.view?.addGestureRecognizer(swipeUp)
         
-        updateTools(opacity: 0.4, b: false)
+        updateTools(opacity: 0.5, b: false)
         
         totalMoney.text = "\(userDefaults.integer(forKey: "money"))"
         userDefaults.synchronize()
+        
+        let swipe: SKSpriteNode = childNode(withName: "swipeScreen") as! SKSpriteNode
+        
+        if lastPosition != 0{
+            swipe.position.y = lastPosition
+        }
+        
     }
     
     func updateTools(opacity: CGFloat, b: Bool) {
         let swipe: SKSpriteNode = childNode(withName: "swipeScreen") as! SKSpriteNode
+        print(swipe)
         
         let userDefaults = UserDefaults.standard
         var unlockedTools = userDefaults.array(forKey: "unlockedTools") as! [Bool]
         
         for i in 0 ... unlockedTools.count - 1{
+            
+            let name = toolsMenu.unlockedToolsName[i]
+            let node = swipe.childNode(withName: "\(name)")
+            let lock = node?.childNode(withName: "\(name)Lock")
+           
             if unlockedTools[i] == b{
-                let name = toolsMenu.unlockedToolsName[i]
-                
-                var node = swipe.childNode(withName: "\(name)")
+                let node = swipe.childNode(withName: "\(name)")
                 node?.alpha = opacity
-                
-                node = swipe.childNode(withName: "\(name)Info")
-                node?.alpha = opacity
-                
-                node = swipe.childNode(withName: "\(name)Pic")
-                node?.alpha = opacity
-                
-                let label = swipe.childNode(withName: "\(name)Name")
-                label?.alpha = opacity
+            }
+
+            if unlockedTools[i]{
+                lock?.isHidden = true
+            }else{
+                lock?.isHidden = false
             }
         }
         
@@ -122,15 +132,15 @@ class toolsMenu: SKScene {
                 
                 switch swipeGesture.direction {
                 case UISwipeGestureRecognizerDirection.down:
-                    if 175 + swipeMove > swipe.position.y{
-                        swipe.run(SKAction.moveBy(x: 0, y: 175 - swipe.position.y, duration: timeSwipe))
+                    if 210 + swipeMove > swipe.position.y{
+                        swipe.run(SKAction.moveBy(x: 0, y: 210 - swipe.position.y, duration: timeSwipe))
                     }else{
                         swipe.run(SKAction.moveBy(x: 0, y: -swipeMove, duration: timeSwipe))
                     }
                     
                 case UISwipeGestureRecognizerDirection.up:
-                    if 383 - swipeMove < swipe.position.y{
-                        swipe.run(SKAction.moveBy(x: 0, y: 383 - swipe.position.y, duration: timeSwipe))
+                    if 360 - swipeMove < swipe.position.y{
+                        swipe.run(SKAction.moveBy(x: 0, y: 360 - swipe.position.y, duration: timeSwipe))
                     }else{
                         swipe.run(SKAction.moveBy(x: 0, y: swipeMove, duration: timeSwipe))
                     }
@@ -143,17 +153,17 @@ class toolsMenu: SKScene {
     }
     
     /*override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
-        let swipe: SKSpriteNode = childNode(withName: "swipeScreen") as! SKSpriteNode
-        
-        for touch in touches {
-            let location = touch.location(in: self)
-            let previousLocation = touch.previousLocation(in: self)
-            
-            let deltaY = previousLocation.y - location.y
-            
-            swipe.position.y += deltaY
-        }
-    }*/
+     let swipe: SKSpriteNode = childNode(withName: "swipeScreen") as! SKSpriteNode
+     
+     for touch in touches {
+     let location = touch.location(in: self)
+     let previousLocation = touch.previousLocation(in: self)
+     
+     let deltaY = previousLocation.y - location.y
+     
+     swipe.position.y += deltaY
+     }
+     }*/
     
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
         
@@ -186,6 +196,9 @@ class toolsMenu: SKScene {
             }else if (nodeName?.hasPrefix("police"))!{
                 toolsMenu.getTool = "police"
             }
+            
+            let swipe: SKSpriteNode = childNode(withName: "swipeScreen") as! SKSpriteNode
+            lastPosition = swipe.position.y
             
             guard let skView = self.view as SKView! else{
                 print("Could not get Skview")
@@ -229,7 +242,7 @@ class toolsMenu: SKScene {
                 popUp.position.x = 160
                 popUp.position.y = 300
                 popUp.zPosition = 9
-
+                
                 canSwipe = false
                 poppingUp = true
                 
@@ -266,7 +279,7 @@ class toolsMenu: SKScene {
                     userDefaults.set(unlockedTools, forKey: "unlockedTools")
                     
                     self.totalMoney.text = "\(userDefaults.integer(forKey: "money"))"
-
+                    
                     userDefaults.synchronize()
                     
                     self.updateTools(opacity: 1, b: true)

@@ -14,10 +14,13 @@
 
 
 import SpriteKit
+import AVFoundation
 
 var soundIsPlaying = false
 
 class MainMenu: SKScene {
+    
+    static var musicPlayer: AVAudioPlayer!
     
     var playButton: MSButtonNode!
     
@@ -74,9 +77,25 @@ class MainMenu: SKScene {
             openWindowY.append((window?.position.y)!)
         }
         
-        if !soundIsPlaying{
-            self.run(SKAction.playSoundFileNamed("SummerSunday", waitForCompletion: false))
+        /*if !soundIsPlaying{
+            MainMenu.musicPlayer.run(SKAction.repeatForever(SKAction.playSoundFileNamed("SummerSunday", waitForCompletion: true)))
             soundIsPlaying = true
+        }*/
+        
+        
+        if !soundIsPlaying{
+            let path = Bundle.main.path(forResource: "SummerSunday.wav", ofType:nil)!
+            let url = URL(fileURLWithPath: path)
+            
+            do {
+                let sound = try AVAudioPlayer(contentsOf: url)
+                MainMenu.musicPlayer = sound
+                sound.play()
+                MainMenu.musicPlayer.numberOfLoops = -1
+                soundIsPlaying = true
+            } catch {
+                // couldn't load file :(
+            }
         }
         
         self.run(SKAction.repeatForever(SKAction.sequence([SKAction.run{self.openWindow()}, SKAction.wait(forDuration: 3)])))
