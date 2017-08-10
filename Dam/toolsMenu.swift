@@ -18,14 +18,16 @@ class toolsMenu: SKScene {
     var cancelButton: MSButtonNode!
     var confirmButton: MSButtonNode!
     var popUp = SKSpriteNode()
-    var priceToBuy: SKLabelNode!
-    var warningLabel: SKLabelNode!
-    var totalMoney: SKLabelNode!
+    //var priceToBuy: SKLabelNode!
+    var warningLabel: SKSpriteNode!
+    var buyFor: SKSpriteNode!
+    //var totalMoney: SKLabelNode!
+    var p: [SKSpriteNode] = []
     
     static let unlockedToolsName: [String] = ["wood", "glue", "tape", "cement", "lock", "portal" , "ice", "health", "wall", "police"]
     static let coolingTimes: [TimeInterval] = [1.5,1.5,2,2,1,2,1.5,2,4,1]
     static var unlocked: [Bool] = [true, true, false, false, true, false, false, false, false, false]
-    var toolPrice: [Int] = [0,0,500,1000,0,4000,2000, 5000, 10000,6300]
+    var toolPrice: [Int] = [0,0,2500,5000,0,9000,7500, 8000, 15000,10000]
     
     var canSwipe = true
     var poppingUp = false
@@ -39,7 +41,6 @@ class toolsMenu: SKScene {
         let firstTime: [Bool] = userDefaults.array(forKey: "unlockedTools") as? [Bool] ?? []
         
         if firstTime.count == 0{
-            print("firstTime")
             userDefaults.set(toolsMenu.unlocked, forKey: "unlockedTools")
             userDefaults.synchronize()
         }
@@ -47,23 +48,21 @@ class toolsMenu: SKScene {
         backButton = childNode(withName: "//backButton") as! MSButtonNode
         cancelButton = childNode(withName: "cancelButton") as! MSButtonNode
         confirmButton = childNode(withName: "confirmButton") as! MSButtonNode
-        priceToBuy = childNode(withName: "priceLabel") as! SKLabelNode
-        warningLabel = childNode(withName: "warningLabel") as! SKLabelNode
-        totalMoney = childNode(withName: "totalMoney") as! SKLabelNode
-        
-        priceToBuy.isHidden = true
+        warningLabel = childNode(withName: "warningLabel") as! SKSpriteNode
+        buyFor = childNode(withName: "buyFor") as! SKSpriteNode
+
         confirmButton.isHidden = true
         cancelButton.isHidden = true
         warningLabel.isHidden = true
+        buyFor.isHidden = true
         
         backButton.selectedHandler = { [weak self] in
             if !(self?.poppingUp)!{
                 guard let skView = self?.view as SKView! else{
-                    print("Could not get Skview")
                     return
                 }
                 
-                guard let scene = GameScene(fileNamed: "buildingsMenu") else {
+                guard let scene = SKScene(fileNamed: "buildingsMenu") else {
                     return
                 }
                 scene.scaleMode = .aspectFit
@@ -82,7 +81,27 @@ class toolsMenu: SKScene {
         
         updateTools(opacity: 0.5, b: false)
         
-        totalMoney.text = "\(userDefaults.integer(forKey: "money"))"
+        let number = "\(userDefaults.integer(forKey: "money"))"
+        
+        let array = number.characters.flatMap{Int(String($0))}
+        
+        var firstX: CGFloat = 85
+        
+        for n in array{
+            let texture = SKTexture(imageNamed: "\(n)")
+            let digit = SKSpriteNode(texture: texture)
+            addChild(digit)
+            
+            digit.position.x = firstX
+            firstX += 25
+            digit.position.y = 535
+            digit.xScale = 0.4
+            digit.yScale = 0.4
+            digit.zPosition = 6
+            
+            p.append(digit)
+        }
+
         userDefaults.synchronize()
         
         let swipe: SKSpriteNode = childNode(withName: "swipeScreen") as! SKSpriteNode
@@ -95,8 +114,7 @@ class toolsMenu: SKScene {
     
     func updateTools(opacity: CGFloat, b: Bool) {
         let swipe: SKSpriteNode = childNode(withName: "swipeScreen") as! SKSpriteNode
-        print(swipe)
-        
+
         let userDefaults = UserDefaults.standard
         var unlockedTools = userDefaults.array(forKey: "unlockedTools") as! [Bool]
         
@@ -105,7 +123,8 @@ class toolsMenu: SKScene {
             let name = toolsMenu.unlockedToolsName[i]
             let node = swipe.childNode(withName: "\(name)")
             let lock = node?.childNode(withName: "\(name)Lock")
-           
+            let info = node?.childNode(withName: "\(name)Info")
+   
             if unlockedTools[i] == b{
                 let node = swipe.childNode(withName: "\(name)")
                 node?.alpha = opacity
@@ -116,6 +135,8 @@ class toolsMenu: SKScene {
             }else{
                 lock?.isHidden = false
             }
+               
+            info?.alpha = 1
         }
         
     }
@@ -139,6 +160,12 @@ class toolsMenu: SKScene {
                     }
                     
                 case UISwipeGestureRecognizerDirection.up:
+                    let r = childNode(withName: "moreTools")
+                    
+                    if r != nil{
+                        r?.removeFromParent()
+                    }
+                    
                     if 360 - swipeMove < swipe.position.y{
                         swipe.run(SKAction.moveBy(x: 0, y: 360 - swipe.position.y, duration: timeSwipe))
                     }else{
@@ -201,7 +228,6 @@ class toolsMenu: SKScene {
             lastPosition = swipe.position.y
             
             guard let skView = self.view as SKView! else{
-                print("Could not get Skview")
                 return
             }
             
@@ -224,12 +250,36 @@ class toolsMenu: SKScene {
             if unlockedTools[index!] == false{
                 
                 let price = toolPrice[index!]
-                
-                priceToBuy.isHidden = false
+
                 cancelButton.isHidden = false
                 confirmButton.isHidden = false
+                buyFor.isHidden = false
                 
-                priceToBuy.text = "Buy For \(price)"
+                let number = "\(price)"
+                
+                let array = number.characters.flatMap{Int(String($0))}
+                var digits: [SKSpriteNode] = []
+                
+                var firstX: CGFloat = 190
+                
+                if array.count == 4{
+                    firstX = 195
+                }
+                
+                for n in array{
+                    let texture = SKTexture(imageNamed: "\(n)b")
+                    let digit = SKSpriteNode(texture: texture)
+                    self.addChild(digit)
+                    
+                    digit.position.x = firstX
+                    firstX += 20
+                    digit.position.y = 340
+                    digit.xScale = 0.4
+                    digit.yScale = 0.4
+                    digit.zPosition = 10
+                    
+                    digits.append(digit)
+                }
                 
                 let texture = SKTexture(imageNamed: "popUp")
                 popUp = SKSpriteNode(texture: texture)
@@ -251,38 +301,72 @@ class toolsMenu: SKScene {
                     confirmButton.isHidden = true
                 }
                 
-                cancelButton.selectedHandler = {
-                    self.popUp.removeFromParent()
-                    self.cancelButton.isHidden = true
-                    self.confirmButton.isHidden = true
-                    self.priceToBuy.isHidden = true
-                    self.warningLabel.isHidden = true
-                    self.canSwipe = true
-                    self.poppingUp = false
+                cancelButton.selectedHandler = { [weak self] in
+                    self?.popUp.removeFromParent()
+                    self?.cancelButton.isHidden = true
+                    self?.confirmButton.isHidden = true
+                    self?.warningLabel.isHidden = true
+                    self?.canSwipe = true
+                    self?.poppingUp = false
+                    self?.buyFor.isHidden = true
+                    
+                    for i in digits{
+                        i.removeFromParent()
+                    }
+                    
+                    digits.removeAll()
                 }
                 
-                confirmButton.selectedHandler = {
-                    self.popUp.removeFromParent()
-                    self.cancelButton.isHidden = true
-                    self.confirmButton.isHidden = true
-                    self.priceToBuy.isHidden = true
-                    self.warningLabel.isHidden = true
-                    self.canSwipe = true
-                    self.poppingUp = false
+                confirmButton.selectedHandler = { [weak self] in
+                    self?.popUp.removeFromParent()
+                    self?.cancelButton.isHidden = true
+                    self?.confirmButton.isHidden = true
+                    self?.warningLabel.isHidden = true
+                    self?.canSwipe = true
+                    self?.poppingUp = false
+                    self?.buyFor.isHidden = true
                     
                     userDefaults.set(userDefaults.integer(forKey: "money") - price, forKey: "money")
                     userDefaults.synchronize()
                     
-                    self.toolPrice[index!] = 0
+                    self?.toolPrice[index!] = 0
                     unlockedTools[index!] = true
                     
                     userDefaults.set(unlockedTools, forKey: "unlockedTools")
                     
-                    self.totalMoney.text = "\(userDefaults.integer(forKey: "money"))"
+                    let number = "\(userDefaults.integer(forKey: "money"))"
+
+                    let array = number.characters.flatMap{Int(String($0))}
+                    
+                    var firstX: CGFloat = 85
+
+                    for i in (self?.p)!{
+                        i.removeFromParent()
+                    }
+                    
+                    for n in array{
+                        let texture = SKTexture(imageNamed: "\(n)")
+                        let digit = SKSpriteNode(texture: texture)
+                        self?.addChild(digit)
+                        
+                        digit.position.x = firstX
+                        firstX += 25
+                        digit.position.y = 535
+                        digit.xScale = 0.4
+                        digit.yScale = 0.4
+                        digit.zPosition = 6
+                    }
                     
                     userDefaults.synchronize()
                     
-                    self.updateTools(opacity: 1, b: true)
+                    self?.updateTools(opacity: 1, b: true)
+                    
+                    for i in digits{
+                        i.removeFromParent()
+                    }
+                    
+                    digits.removeAll()
+                    
                 }
                 
             }

@@ -6,11 +6,6 @@
 //  Copyright © 2017 Akash Nambiar. All rights reserved.
 //
 
-//http://dabuttonfactory.com/#t=Play&f=Vollkorn-Bold&ts=75&tc=9fc5e8&tshs=1&tshc=000&hp=20&vp=8&c=5&bgt=pyramid&bgc=252f38&ebgc=073763&it=png
-
-//http://dabuttonfactory.com/#t=GAME+OVER&f=Vollkorn-Bold&ts=100&tc=eaea28&tshs=1&tshc=f00&hp=20&vp=8&c=5&bgt=pyramid&bgc=600&ebgc=c00&it=png
-
-//MEMORY LEAK TO BUILDING MENU
 
 
 import SpriteKit
@@ -36,11 +31,10 @@ class MainMenu: SKScene {
         
         playButton.selectedHandler = { [weak self] in
             guard let skView = self?.view as SKView! else{
-                print("Could not get Skview")
                 return
             }
         
-            guard let scene = GameScene(fileNamed: "buildingsMenu") else {
+            guard let scene = SKScene(fileNamed: "buildingsMenu") else {
                 return
             }
      
@@ -70,7 +64,7 @@ class MainMenu: SKScene {
         man.run(SKAction.repeatForever(SKAction.sequence([SKAction.moveTo(x: 290, duration: 10), SKAction.moveTo(x: 30, duration: 10)])))
     
         
-        for i in 1 ... buildingMenu.numberWindows{
+        for i in 1 ... 6{
             let window = childNode(withName: "w\(i)")
             
             openWindowX.append((window?.position.x)!)

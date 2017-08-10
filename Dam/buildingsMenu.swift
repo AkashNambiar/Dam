@@ -11,18 +11,19 @@ import SpriteKit
 
 class buildingMenu: SKScene{
     
-    var totalMoney: SKLabelNode!
+    //var totalMoney: SKLabelNode!
     var shop: MSButtonNode!
     var backButton: MSButtonNode!
-    var fowardButton: MSButtonNode!
-    var backwardButton: MSButtonNode!
+    //var fowardButton: MSButtonNode!
+    //var backwardButton: MSButtonNode!
+    var p: [SKSpriteNode] = []
     
     static var numberWindows = 6
     static var numberNoCracks = 0
     static var oldManMoving = false
     static var buildingName = "newBuildingScene"
     
-    var buildingPrice: [Int] = [0,2000]
+    var buildingPrice: [Int] = [0,3000]
     var buildingsUnlcoked: [Bool] = [true, false]
     
     var buildingNames = ["newBuildingScene", "newBuildingScene2"]
@@ -32,12 +33,13 @@ class buildingMenu: SKScene{
     var cancelButton: MSButtonNode!
     var confirmButton: MSButtonNode!
     var popUp = SKSpriteNode()
-    var priceToBuy: SKLabelNode!
-    var warningLabel: SKLabelNode!
+    //var priceToBuy: SKLabelNode!
+    var warningLabel: SKSpriteNode!
+    var buyFor: SKSpriteNode!
     
     var poppingUp = false
     var canSwipe = true
-    let swipeMove: CGFloat = 175
+    let swipeMove: CGFloat = 320
     
     override func didMove(to view: SKView) {
         
@@ -53,28 +55,24 @@ class buildingMenu: SKScene{
         
         cancelButton = childNode(withName: "cancelButton") as! MSButtonNode
         confirmButton = childNode(withName: "confirmButton") as! MSButtonNode
-        fowardButton = childNode(withName: "fowardButton") as! MSButtonNode
-        backwardButton = childNode(withName: "backwardButton") as! MSButtonNode
-        priceToBuy = childNode(withName: "priceLabel") as! SKLabelNode
-        warningLabel = childNode(withName: "warningLabel") as! SKLabelNode
+        warningLabel = childNode(withName: "warningLabel") as! SKSpriteNode
+        buyFor = childNode(withName: "buyFor") as! SKSpriteNode
         
-        priceToBuy.isHidden = true
         confirmButton.isHidden = true
         cancelButton.isHidden = true
         warningLabel.isHidden = true
+        buyFor.isHidden = true
         
         shop = childNode(withName: "//shop") as! MSButtonNode
-        totalMoney = childNode(withName: "totalMoney") as! SKLabelNode
         backButton = childNode(withName: "backButton") as! MSButtonNode
         
         shop.selectedHandler = { [weak self] in
             if !(self?.poppingUp)!{
                 guard let skView = self?.view as SKView! else{
-                    print("Could not get Skview")
                     return
                 }
                 
-                guard let scene = GameScene(fileNamed: "toolsMenu") else {
+                guard let scene = SKScene(fileNamed: "toolsMenu") else {
                     return
                 }
                 scene.scaleMode = .aspectFit
@@ -86,11 +84,10 @@ class buildingMenu: SKScene{
         backButton.selectedHandler = { [weak self] in
             if !(self?.poppingUp)!{
                 guard let skView = self?.view as SKView! else{
-                    print("Could not get Skview")
                     return
                 }
                 
-                guard let scene = GameScene(fileNamed: "MainMenu") else {
+                guard let scene = SKScene(fileNamed: "MainMenu") else {
                     return
                 }
                 scene.scaleMode = .aspectFit
@@ -99,7 +96,7 @@ class buildingMenu: SKScene{
             }
         }
        
-        /*
+        
         let swipeLeft = UISwipeGestureRecognizer(target: self, action: #selector(self.respondToSwipeGesture))
         swipeLeft.direction = UISwipeGestureRecognizerDirection.left
         self.view?.addGestureRecognizer(swipeLeft)
@@ -107,14 +104,33 @@ class buildingMenu: SKScene{
         let swipeRight = UISwipeGestureRecognizer(target: self, action: #selector(self.respondToSwipeGesture))
         swipeRight.direction = UISwipeGestureRecognizerDirection.right
         self.view?.addGestureRecognizer(swipeRight)
-        */
         
-        totalMoney.text = "\(userDefaults.integer(forKey: "money"))"
+        let number = "\(userDefaults.integer(forKey: "money"))"
+
+        let array = number.characters.flatMap{Int(String($0))}
+        
+        var firstX: CGFloat = 85
+        
+        for n in array{
+            let texture = SKTexture(imageNamed: "\(n)")
+            let digit = SKSpriteNode(texture: texture)
+            addChild(digit)
+            
+            digit.position.x = firstX
+            firstX += 25
+            digit.position.y = 535
+            digit.xScale = 0.4
+            digit.yScale = 0.4
+            digit.zPosition = 1
+            
+            p.append(digit)
+        }
+
         userDefaults.synchronize()
         
-        backwardButton.isHidden = true
+        /*backwardButton.isHidden = true
         
-        fowardButton.selectedHandler = {
+        fowardButton.selectedHandler = { [weak self] in
             self.backwardButton.isHidden = true
             self.fowardButton.isHidden = true
             
@@ -126,7 +142,7 @@ class buildingMenu: SKScene{
                 }]))
         }
         
-        backwardButton.selectedHandler = {
+        backwardButton.selectedHandler = { [weak self] in
             self.backwardButton.isHidden = true
             self.fowardButton.isHidden = true
             
@@ -137,7 +153,10 @@ class buildingMenu: SKScene{
                 self.fowardButton.isHidden = false
                 }]))
 
-        }
+        }*/
+        
+        let swipe: SKSpriteNode = self.childNode(withName: "swipeScreen") as! SKSpriteNode
+        swipe.position.x = 320
     }
     
     func respondToSwipeGesture(gesture: UIGestureRecognizer) {
@@ -149,19 +168,23 @@ class buildingMenu: SKScene{
             if let swipeGesture = gesture as? UISwipeGestureRecognizer {
                 
                 let swipe: SKSpriteNode = childNode(withName: "swipeScreen") as! SKSpriteNode
-                let timeSwipe: TimeInterval = 0.1
+                let timeSwipe: TimeInterval = 0.25
                 
                 switch swipeGesture.direction {
                 case UISwipeGestureRecognizerDirection.right:
                     
-                    if 320 < swipe.position.x + swipeMove {
+                        if 320 < swipe.position.x + swipeMove {
                         swipe.run(SKAction.moveBy(x: 320 - swipe.position.x, y: 0, duration: timeSwipe))
                     }else{
                         swipe.run(SKAction.moveBy(x: swipeMove, y: 0, duration: timeSwipe))
                     }
-                    
                 case UISwipeGestureRecognizerDirection.left:
+                    let r = childNode(withName: "swipeR")
                     
+                    if r != nil{
+                        r?.removeFromParent()
+                    }
+                
                     if swipeMove > swipe.position.x{
                         swipe.run(SKAction.moveBy(x: -swipe.position.x,y: 0,duration: timeSwipe))
                     }else{
@@ -220,11 +243,32 @@ class buildingMenu: SKScene{
                         poppingUp = true
                         canSwipe = false
                         
-                        priceToBuy.isHidden = false
                         cancelButton.isHidden = false
                         confirmButton.isHidden = false
+                        buyFor.isHidden = false
                         
-                        priceToBuy.text = "Buy For \(price)"
+                        let number = "\(price)"
+                        
+                        let array = number.characters.flatMap{Int(String($0))}
+                        var digits: [SKSpriteNode] = []
+                        
+                        var firstX: CGFloat = 195
+                        
+                        for n in array{
+                            let texture = SKTexture(imageNamed: "\(n)b")
+                            let digit = SKSpriteNode(texture: texture)
+                            self.addChild(digit)
+                            
+                            digit.position.x = firstX
+                            firstX += 20
+                            digit.position.y = 340
+                            digit.xScale = 0.4
+                            digit.yScale = 0.4
+                            digit.zPosition = 10
+                            
+                            digits.append(digit)
+                        }
+
                         
                         let texture = SKTexture(imageNamed: "popUp")
                         popUp = SKSpriteNode(texture: texture)
@@ -242,43 +286,78 @@ class buildingMenu: SKScene{
                             confirmButton.isHidden = true
                         }
                         
-                        cancelButton.selectedHandler = {
-                            self.popUp.removeFromParent()
-                            self.cancelButton.isHidden = true
-                            self.confirmButton.isHidden = true
-                            self.priceToBuy.isHidden = true
-                            self.warningLabel.isHidden = true
-                            self.poppingUp = false
-                            self.canSwipe = true
+                        cancelButton.selectedHandler = { [weak self] in
+                            self?.popUp.removeFromParent()
+                            self?.cancelButton.isHidden = true
+                            self?.confirmButton.isHidden = true
+                            self?.warningLabel.isHidden = true
+                            self?.buyFor.isHidden = true
+                            self?.poppingUp = false
+                            self?.canSwipe = true
+                            
+                            for i in digits{
+                                i.removeFromParent()
+                            }
+                            
+                            digits.removeAll()
                         }
                         
-                        confirmButton.selectedHandler = {
-                            self.popUp.removeFromParent()
-                            self.cancelButton.isHidden = true
-                            self.confirmButton.isHidden = true
-                            self.priceToBuy.isHidden = true
-                            self.warningLabel.isHidden = true
-                            self.canSwipe = true
+                        confirmButton.selectedHandler = { [weak self] in
+                            self?.popUp.removeFromParent()
+                            self?.cancelButton.isHidden = true
+                            self?.buyFor.isHidden = true
+                            self?.confirmButton.isHidden = true
+                            self?.warningLabel.isHidden = true
+                            self?.canSwipe = true
                             
                             userDefaults.set(userDefaults.integer(forKey: "money") - price, forKey: "money")
                             userDefaults.synchronize()
                             
-                            self.buildingPrice[i-1] = 0
+                            self?.buildingPrice[i-1] = 0
                             firstTime[i-1] = true
                             
-                            self.totalMoney.text = "\(userDefaults.integer(forKey: "money"))"
+                            let number = "\(userDefaults.integer(forKey: "money"))"
+                            
+                            let array = number.characters.flatMap{Int(String($0))}
+                            
+                            var firstX: CGFloat = 85
+                            
+                            for j in (self?.p)!{
+                                j.removeFromParent()
+                            }
+                            
+                            for n in array{
+                                
+                                let texture = SKTexture(imageNamed: "\(n)")
+                                let digit = SKSpriteNode(texture: texture)
+                                self?.addChild(digit)
+                                
+                                digit.position.x = firstX
+                                firstX += 25
+                                digit.position.y = 535
+                                digit.xScale = 0.4
+                                digit.yScale = 0.4
+                                digit.zPosition = 1
+                            }
+
                             userDefaults.set(firstTime, forKey: "unlockedBuildings")
                             userDefaults.synchronize()
                             
-                            self.updateBuildings()
+                            self?.updateBuildings()
                             
-                            self.poppingUp = false
+                            self?.poppingUp = false
+                            
+                            for i in digits{
+                                i.removeFromParent()
+                            }
+                            
+                            digits.removeAll()
                         }
                         
                     }else{
                         guard let skView = self.view as SKView! else{ return }
                         
-                        guard let scene = GameScene(fileNamed: buildingNames[i-1]) else {
+                        guard let scene = SKScene(fileNamed: buildingNames[i-1]) else {
                             return
                         }
                         scene.scaleMode = .aspectFit

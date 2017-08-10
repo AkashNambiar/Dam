@@ -30,11 +30,14 @@ class newBuildingScene: SKScene, SKPhysicsContactDelegate {
     var retryButton: MSButtonNode!
     var homeButton: MSButtonNode!
     var goHome: MSButtonNode!
+    var pauseButton: MSButtonNode!
+    var playNow: MSButtonNode!
     
     var currentState: playingState = .playing
     
     var toolList: [tools] = []
     var toolPics: [SKSpriteNode] = []
+    var previousTool: Int = 100
     var specialTool: tools!
     
     var openWindowX: [CGFloat] = []
@@ -80,6 +83,27 @@ class newBuildingScene: SKScene, SKPhysicsContactDelegate {
     var tutorial5 = true
     var tutorial6 = false
     var tutorial7 = false
+    
+    var t1 = false
+    var t2 = false
+    var t3 = false
+    var t4 = false
+    var tt4 = false
+    var ttt4 = false
+    var t5 = false
+    var t6 = true
+    var t7 = false
+    
+    var tapCrack = SKSpriteNode()
+    var arrow1 = SKSpriteNode()
+    var arrow2 = SKSpriteNode()
+    var tapSwitch = SKSpriteNode()
+    var fallingBrick = SKSpriteNode()
+    var remove5 = SKSpriteNode()
+    var however = SKSpriteNode()
+    var hit5 = SKSpriteNode()
+    var leave = SKSpriteNode()
+    var lockLabel = SKSpriteNode()
     
     var timesHitToLeave: CGFloat = 3
     var numCracksToMove = 5
@@ -131,7 +155,7 @@ class newBuildingScene: SKScene, SKPhysicsContactDelegate {
         } catch {
             // couldn't load file :(
         }
-
+        
         MainMenu.musicPlayer.stop()
         
         currentTool = childNode(withName: "currentTool") as! SKLabelNode
@@ -140,19 +164,68 @@ class newBuildingScene: SKScene, SKPhysicsContactDelegate {
         retryButton = childNode(withName: "//retryButton") as! MSButtonNode
         homeButton = childNode(withName: "//homeButton") as! MSButtonNode
         goHome = childNode(withName: "goHome") as! MSButtonNode
+        pauseButton = childNode(withName: "pauseButton") as! MSButtonNode
+        playNow = childNode(withName: "playNow") as! MSButtonNode
         
         retryButton.isHidden = true
         homeButton.isHidden = true
+        playNow.isHidden = true
         
         physicsWorld.contactDelegate = self
         
         beginFunc()
+        
+        pauseButton.selectedHandler = { [weak self] in
+            
+            self?.playNow.isHidden = false
+            
+            self?.goHome.isHidden = true
+            self?.pauseButton.isHidden = true
+            
+            var background = SKSpriteNode()
+            let texture = SKTexture(imageNamed: "popUp")
+            background = SKSpriteNode(texture: texture)
+            
+            self?.addChild(background)
+            
+            background.name = "d"
+            background.size.height = 200
+            background.size.width = 305
+            background.position.x = 160
+            background.position.y = 335
+            background.zPosition = 5
+            
+            let paused = self?.textureToNode(name: "paused")
+            self?.addChild(paused!)
+            paused?.name = "d"
+            paused?.position.x = 160
+            paused?.position.y = 370
+            paused?.zPosition = 6
+            
+            self?.playNow.selectedHandler = { [weak self] in
+                background.removeFromParent()
+                paused?.removeFromParent()
+                self?.playNow.isHidden = true
+                
+                self?.scene?.view?.isPaused = false
+                self?.goHome.isHidden = false
+                self?.pauseButton.isHidden = false
+            }
+            
+            let wait = SKAction.wait(forDuration: 0.1)
+            let code = SKAction.run {
+                self?.scene?.view?.isPaused = true
+            }
+            
+            self?.run(SKAction.sequence([wait, code]))
+        }
         
         goHome.selectedHandler = { [weak self] in
             
             if self?.canPressButton == false {return}
             
             self?.goHome.isHidden = true
+            self?.pauseButton.isHidden = true
             
             var background = SKSpriteNode()
             var texture = SKTexture(imageNamed: "popUp")
@@ -180,7 +253,12 @@ class newBuildingScene: SKScene, SKPhysicsContactDelegate {
             
             texture = SKTexture(imageNamed: "moneyCollected")
             let finalMoney = SKSpriteNode(texture: texture)
-            self?.addChild(finalMoney)
+            
+            if self?.currentState == .tutorial{
+                cracksRemoved.position.y = 350
+            }else{
+                self?.addChild(finalMoney)
+            }
             
             finalMoney.name = "fehvsj"
             finalMoney.xScale = 0.55
@@ -205,6 +283,7 @@ class newBuildingScene: SKScene, SKPhysicsContactDelegate {
             self?.retryButton.selectedHandler = { [weak self] in
                 
                 self?.goHome.isHidden = false
+                self?.pauseButton.isHidden = false
                 
                 self?.scene?.view?.isPaused = false
                 
@@ -226,7 +305,7 @@ class newBuildingScene: SKScene, SKPhysicsContactDelegate {
                     customAttributes: [
                         "Money Collected": 0
                     ])
-             
+                
                 let path = Bundle.main.path(forResource: "SummerSunday.wav", ofType:nil)!
                 let url = URL(fileURLWithPath: path)
                 
@@ -239,12 +318,12 @@ class newBuildingScene: SKScene, SKPhysicsContactDelegate {
                 } catch {
                     // couldn't load file :(
                 }
-
+                
                 self?.music.stop()
                 
                 let skView = self?.view as SKView!
                 
-                guard let scene = GameScene(fileNamed:"buildingsMenu") as GameScene! else { return }
+                guard let scene = SKScene(fileNamed:"buildingsMenu") as SKScene! else { return }
                 
                 scene.scaleMode = .aspectFill
                 skView?.presentScene(scene)
@@ -300,7 +379,7 @@ class newBuildingScene: SKScene, SKPhysicsContactDelegate {
             oldManMove(old: old)
         }
         
-        for i in 1 ... buildingMenu.numberWindows{
+        for i in 1 ... buildingMenu.numberWindows - buildingMenu.numberNoCracks{
             let window = childNode(withName: "w\(i)")
             
             openWindowX.append((window?.position.x)!)
@@ -308,10 +387,9 @@ class newBuildingScene: SKScene, SKPhysicsContactDelegate {
         }
         
         let userDefaults = UserDefaults.standard
-        var tutorialCompleted = userDefaults.bool(forKey: "tutorialCompelted") as Bool ?? false
+        let tutorialCompleted = userDefaults.bool(forKey: "tutorialCompelted") as Bool ?? false
         userDefaults.synchronize()
-        
-        tutorialCompleted = true
+
         
         if !tutorialCompleted{
             currentState = .tutorial
@@ -337,68 +415,171 @@ class newBuildingScene: SKScene, SKPhysicsContactDelegate {
     
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         
-        if tutorial3{
-            tutorialLabel.removeFromParent()
-            scene?.view?.isPaused = false
+        if t1{
+            arrow1.removeFromParent()
+            arrow2.removeFromParent()
+            tapSwitch.removeFromParent()
             
-            tutorial3 = false
-            tutorial4 = true
+            let wait = SKAction.wait(forDuration: 1.5)
+            let action = SKAction.run{
+                self.t2 = true
+            }
+            
+            run(SKAction.sequence([wait,action]))
+            
+            t1 = false
+        }
+        
+        if t4{
+            scene?.view?.isPaused = false
+            leave.removeFromParent()
+            hit5.removeFromParent()
+            
+            t4 = false
+            
+            however = textureToNode(name: "however")
+            addChild(however)
+            
+            however.position.x = 160
+            however.position.y = 400
+            however.xScale = 0.55
+            however.yScale = 0.55
+            however.zPosition = 4
+            
+            remove5 = textureToNode(name: "remove5")
+            addChild(remove5)
+            
+            remove5.position.x = 160
+            remove5.position.y = 370
+            remove5.xScale = 0.55
+            remove5.yScale = 0.55
+            remove5.zPosition = 4
+            
+            t4 = false
+            t5 = true
             
             return
         }
         
-        if tutorial7{
-            tutorialLabel.removeFromParent()
-            tutorialLabel2.removeFromParent()
+        if ttt4{
             scene?.view?.isPaused = false
             
-            tutorial7 = false
+            fallingBrick.removeFromParent()
             
-            endTutorial()
-            
-            return
+            ttt4 = false
+            tt4 = true
         }
         
-        if tutorial6{
-            tutorialLabel.removeFromParent()
-            tutorialLabel2.removeFromParent()
-            
-            tutorialLabel.text = "HOWEVER, IF \(numCracksToMove) CRACKS ARE REMOVED "
-            tutorialLabel.fontName = "Didot Bold"
-            tutorialLabel.fontSize = 14
-            tutorialLabel.run(SKAction.colorize(with: UIColor.red, colorBlendFactor: 1, duration: 0))
-            
-            tutorialLabel.name = "label"
-            tutorialLabel.position.x = 160
-            tutorialLabel.position.y = 380
-            tutorialLabel.zPosition = 4
-            
-            tutorialLabel2.text = "A PERSON MOVES INSIDE AND PAYS YOU MONEY"
-            tutorialLabel2.fontName = "Didot Bold"
-            tutorialLabel2.fontSize = 12
-            tutorialLabel2.run(SKAction.colorize(with: UIColor.red, colorBlendFactor: 1, duration: 0))
-            
-            tutorialLabel2.name = "label"
-            tutorialLabel2.position.x = 160
-            tutorialLabel2.position.y = tutorialLabel.position.y - 24
-            tutorialLabel2.zPosition = 4
-            
-            
-            self.view?.isUserInteractionEnabled = false
+        if t5{
+            however.removeFromParent()
+            remove5.removeFromParent()
             
             let wait = SKAction.wait(forDuration: 0.1)
-            let code = SKAction.run {
-                self.view?.isUserInteractionEnabled = true
-                self.addChild(self.tutorialLabel)
-                self.addChild(self.tutorialLabel2)
-            }
-            self.run(SKAction.sequence([wait,code]))
-            
-            tutorial6 = false
-            tutorial7 = true
-            
+             let code = SKAction.run {
+             self.toolList.append(.lock)
+             
+             self.removeTool()
+             self.displayTools()
+             self.currentTool.text = self.getNameOfCurrentTool()
+             
+             self.openWindow()
+             
+             self.lockLabel = self.textureToNode(name: "locks")
+             self.addChild(self.lockLabel)
+             
+             self.lockLabel.position.x = 160
+             self.lockLabel.position.y = 380
+             self.lockLabel.xScale = 0.65
+             self.lockLabel.yScale = 0.65
+             self.lockLabel.zPosition = 4
+             
+             let point = self.addPointer(box: self.b2)
+             self.previousPointer.removeFromParent()
+             self.previousPointer = point
+             self.pointerPosition = 1
+             self.currentTool.text = self.getNameOfCurrentTool()
+             
+             self.arrow1 = self.textureToNode(name: "arrow")
+             self.addChild(self.arrow1)
+             
+             self.arrow1.name = "a1"
+             self.arrow1.zRotation = -((1/3) * CGFloat.pi)
+             self.arrow1.zPosition = 3
+             self.arrow1.position.x = 190
+             self.arrow1.position.y = 165
+             self.arrow1.xScale = 0.3
+             self.arrow1.yScale = 0.3
+             }
+             
+             run(SKAction.sequence([wait,code]))
+             
+             t7 = true
+            t5 = false
             return
         }
+        /*
+         if tutorial3{
+         tutorialLabel.removeFromParent()
+         scene?.view?.isPaused = false
+         
+         tutorial3 = false
+         tutorial4 = true
+         
+         return
+         }
+         
+         if tutorial7{
+         tutorialLabel.removeFromParent()
+         tutorialLabel2.removeFromParent()
+         scene?.view?.isPaused = false
+         
+         tutorial7 = false
+         
+         endTutorial()
+         
+         return
+         }
+         
+         if tutorial6{
+         tutorialLabel.removeFromParent()
+         tutorialLabel2.removeFromParent()
+         
+         tutorialLabel.text = "HOWEVER, IF \(numCracksToMove) CRACKS ARE REMOVED "
+         tutorialLabel.fontName = "Didot Bold"
+         tutorialLabel.fontSize = 14
+         tutorialLabel.run(SKAction.colorize(with: UIColor.red, colorBlendFactor: 1, duration: 0))
+         
+         tutorialLabel.name = "label"
+         tutorialLabel.position.x = 160
+         tutorialLabel.position.y = 380
+         tutorialLabel.zPosition = 4
+         
+         tutorialLabel2.text = "A PERSON MOVES INSIDE AND PAYS YOU MONEY"
+         tutorialLabel2.fontName = "Didot Bold"
+         tutorialLabel2.fontSize = 12
+         tutorialLabel2.run(SKAction.colorize(with: UIColor.red, colorBlendFactor: 1, duration: 0))
+         
+         tutorialLabel2.name = "label"
+         tutorialLabel2.position.x = 160
+         tutorialLabel2.position.y = tutorialLabel.position.y - 24
+         tutorialLabel2.zPosition = 4
+         
+         
+         self.view?.isUserInteractionEnabled = false
+         
+         let wait = SKAction.wait(forDuration: 0.1)
+         let code = SKAction.run {
+         self.view?.isUserInteractionEnabled = true
+         self.addChild(self.tutorialLabel)
+         self.addChild(self.tutorialLabel2)
+         }
+         self.run(SKAction.sequence([wait,code]))
+         
+         tutorial6 = false
+         tutorial7 = true
+         
+         return
+         }*/
         
         if currentState != .notPlaying && cement == false && tape == false && portal == false{
             let touch = touches.first!
@@ -424,8 +605,6 @@ class newBuildingScene: SKScene, SKPhysicsContactDelegate {
                 return
             }
             
-            print(nodeAtPoint)
-            
             if coolingDown == false {
                 
                 if getCurrentTool() == .lock{
@@ -448,6 +627,13 @@ class newBuildingScene: SKScene, SKPhysicsContactDelegate {
                         man?.removeFromParent()
                         window?.removeFromParent()
                         
+                        if t7{
+                            lockLabel.removeFromParent()
+                            arrow1.removeFromParent()
+                            
+                            endTutorial()
+                        }
+                        
                         coolDown()
                         removeTool()
                         addRandomTool()
@@ -459,37 +645,37 @@ class newBuildingScene: SKScene, SKPhysicsContactDelegate {
                         
                         shouldMovePerson()
                     }else if nodeName == "crack"{
-                        if !warningLabelShowing{
-                            warningLabelShowing = true
-                            
-                            addChild(warningLabel)
-                            
-                            warningLabel.name = "warning"
-                            warningLabel.text = "LOCKS CLOSE WINDOWS"
-                            warningLabel.fontName = "Didot Bold"
-                            warningLabel.fontSize = 20
-                            warningLabel.run(SKAction.colorize(with: UIColor.red, colorBlendFactor: 0.8, duration: 0))
-                            
-                            warningLabel.position.x = 160
-                            warningLabel.position.y = 400
-                            warningLabel.zPosition = 58
-                            
-                            let wait = SKAction.wait(forDuration: 2)
-                            let action = SKAction.run {
-                                self.warningLabel.removeFromParent()
-                                self.warningLabelShowing = false
-                            }
-                            
-                            self.run(SKAction.sequence([wait,action]))
-                        }
+                        /*if !warningLabelShowing{
+                         warningLabelShowing = true
+                         
+                         addChild(warningLabel)
+                         
+                         warningLabel.name = "warning"
+                         warningLabel.text = "LOCKS CLOSE WINDOWS"
+                         warningLabel.fontName = "Didot Bold"
+                         warningLabel.fontSize = 20
+                         warningLabel.run(SKAction.colorize(with: UIColor.red, colorBlendFactor: 0.8, duration: 0))
+                         
+                         warningLabel.position.x = 160
+                         warningLabel.position.y = 400
+                         warningLabel.zPosition = 58
+                         
+                         let wait = SKAction.wait(forDuration: 2)
+                         let action = SKAction.run {
+                         self.warningLabel.removeFromParent()
+                         self.warningLabelShowing = false
+                         }
+                         
+                         self.run(SKAction.sequence([wait,action]))
+                         }*/
                     }
                 }else if getCurrentTool() == .cement {
-                    if nodeName == "wallArea" || nodeName == "crack"  || (nodeName?.hasPrefix("openWindow"))! || (nodeName?.hasPrefix("window"))! || (nodeName?.hasPrefix("noCracks"))! || (nodeName?.hasPrefix("oldMan"))! {
+                    if nodeName == "wallArea" || nodeName == "crack"  || (nodeName?.hasPrefix("openWindow"))! || (nodeName?.hasPrefix("w"))! || (nodeName?.hasPrefix("noCracks"))! || (nodeName?.hasPrefix("oldMan"))! {
                         
-                        cement = true
-                        canPressButton = false
+                        //cement = true
+                        //canPressButton = false
                         
-                        addChild(cementArea)
+                        /*addChild(cementArea)
                         
                         cementArea.name = "cementArea"
                         cementArea.zPosition = 0
@@ -499,9 +685,9 @@ class newBuildingScene: SKScene, SKPhysicsContactDelegate {
                         cementArea.size.width = 80
                         cementArea.anchorPoint.x = 0.5
                         cementArea.anchorPoint.y = 0.5
-                        halfCementSize = cementArea.size.height/2
+                        halfCementSize = cementArea.size.height/2*/
                         
-                        if location.y > (gameTop - halfCementSize) - nodeAboveTouch{
+                        /*if location.y > (gameTop - halfCementSize) - nodeAboveTouch{
                             cementArea.position.y = gameTop - halfCementSize
                         }else if location.y < gameBottom + halfCementSize - nodeAboveTouch{
                             cementArea.position.y = gameBottom + halfCementSize
@@ -515,15 +701,66 @@ class newBuildingScene: SKScene, SKPhysicsContactDelegate {
                             cementArea.position.x = gameRight - halfCementSize
                         }else{
                             cementArea.position.x = location.x
+                        }*/
+                        
+                        let c = SKSpriteNode()
+                        addChild(c)
+                        
+                        c.name = "cementArea"
+                        c.zPosition = 0
+                        c.color = UIColor.red
+                        c.alpha = 0.5
+                        c.size.height = 80
+                        c.size.width = 80
+                        c.anchorPoint.x = 0.5
+                        c.anchorPoint.y = 0.5
+                        halfCementSize = c.size.height/2
+                        
+                        
+                        if location.y > (gameTop - halfCementSize) - nodeAboveTouch{
+                            c.position.y = gameTop - halfCementSize
+                        }else if location.y < gameBottom + halfCementSize - nodeAboveTouch{
+                            c.position.y = gameBottom + halfCementSize
+                        }else{
+                            c.position.y = location.y + nodeAboveTouch
                         }
+                        
+                        if location.x < gameLeft + halfCementSize {
+                            c.position.x = halfCementSize
+                        }else if location.x > gameRight - halfCementSize{
+                            c.position.x = gameRight - halfCementSize
+                        }else{
+                            c.position.x = location.x
+                        }
+                        
+                        for crack in cracks{
+                            if c.contains(crack.position){
+                                removeCrack(nodeAtPoint: crack)
+                                shouldMovePerson()
+                            }
+                        }
+                        
+                        cement = false
+                        
+                        let wait = SKAction.wait(forDuration: 0.1)
+                        let action = SKAction.run {
+                            c.removeFromParent()
+                        }
+                        run(SKAction.sequence([wait,action]))
+                        
+                        coolDown()
+                        removeTool()
+                        addRandomTool()
+                        displayTools()
+                        currentTool.text = getNameOfCurrentTool()
                     }
                 }else if getCurrentTool() == . tape{
-                    if nodeName == "wallArea" || nodeName == "crack"  || (nodeName?.hasPrefix("openWindow"))! || (nodeName?.hasPrefix("window"))! || (nodeName?.hasPrefix("noCracks"))! || (nodeName?.hasPrefix("oldMan"))! {
+                    if nodeName == "wallArea" || nodeName == "crack"  || (nodeName?.hasPrefix("openWindow"))! || (nodeName?.hasPrefix("w"))! || (nodeName?.hasPrefix("noCracks"))! || (nodeName?.hasPrefix("oldMan"))! {
                         
-                        tape = true
-                        canPressButton = false
+                        //tape = true
+                        //canPressButton = false
                         
-                        addChild(tapeArea)
+                        /*addChild(tapeArea)
                         
                         tapeArea.name = "tapeArea"
                         tapeArea.zPosition = 0
@@ -534,22 +771,92 @@ class newBuildingScene: SKScene, SKPhysicsContactDelegate {
                         tapeArea.anchorPoint.x = 0.5
                         tapeArea.anchorPoint.y = 0.5
                         tapeArea.position.x = 160
-                        halfTapeSize = tapeArea.size.height/2
+                        halfTapeSize = tapeArea.size.height/2*/
                         
-                        if location.y > (gameTop - halfTapeSize) - nodeAboveTouch{
+                        /*if location.y > (gameTop - halfTapeSize) - nodeAboveTouch{
                             tapeArea.position.y = gameTop - halfTapeSize
                         }else if location.y < gameBottom + halfTapeSize - nodeAboveTouch{
                             tapeArea.position.y = gameBottom + halfTapeSize
                         }else{
                             tapeArea.position.y = location.y + nodeAboveTouch
+                        }*/
+                        
+                        let t = SKSpriteNode()
+                        addChild(t)
+                        
+                        t.name = "tapeArea"
+                        t.zPosition = 0
+                        t.color = UIColor.red
+                        t.alpha = 0.5
+                        t.size.height = 30
+                        t.size.width = 320
+                        t.anchorPoint.x = 0.5
+                        t.anchorPoint.y = 0.5
+                        t.position.x = 160
+                        halfTapeSize = t.size.height/2
+                        
+                        if location.y > (gameTop - halfTapeSize) - nodeAboveTouch{
+                            t.position.y = gameTop - halfTapeSize
+                        }else if location.y < gameBottom + halfTapeSize - nodeAboveTouch{
+                            t.position.y = gameBottom + halfTapeSize
+                        }else{
+                            t.position.y = location.y + nodeAboveTouch
                         }
+                        
+                        for crack in cracks{
+                            if t.contains(crack.position){
+                                removeCrack(nodeAtPoint: crack)
+                                shouldMovePerson()
+                            }
+                        }
+                        
+                        let wait = SKAction.wait(forDuration: 0.1)
+                        let action = SKAction.run {
+                            t.removeFromParent()
+                        }
+                        run(SKAction.sequence([wait,action]))
+                        
+                        coolDown()
+                        removeTool()
+                        addRandomTool()
+                        displayTools()
+                        currentTool.text = getNameOfCurrentTool()
                         
                     }
                 }else if getCurrentTool() == .portal{
-                    if nodeName == "wallArea" || nodeName == "crack"  || (nodeName?.hasPrefix("openWindow"))! || (nodeName?.hasPrefix("window"))! || (nodeName?.hasPrefix("noCracks"))! || (nodeName?.hasPrefix("oldMan"))! {
+                    if nodeName == "wallArea" || nodeName == "crack"  || (nodeName?.hasPrefix("openWindow"))! || (nodeName?.hasPrefix("w"))! || (nodeName?.hasPrefix("noCracks"))! || (nodeName?.hasPrefix("oldMan"))! {
                         
-                        portal = true
+                        /*portal = true
                         canPressButton = false
+                        
+                        let portalHole = Portal()
+                        addChild(portalHole)
+                        portals.append(portalHole)
+                        portalIndex = portals.index(of: portalHole)!
+                        
+                        portalHole.name = "portalHole"
+                        portalHole.color = UIColor.black
+                        portalHole.alpha = 0.8
+                        portalHole.size.height = 5
+                        portalHole.size.width = 90
+                        halfPortalHeight = portalHole.size.height/2
+                        halfPortalWidth = portalHole.size.width/2
+                        
+                        if location.y > (gameTop - halfPortalHeight) - nodeAboveTouch{
+                            portalHole.position.y = gameTop - halfPortalHeight
+                        }else if location.y < gameBottom + halfPortalHeight - nodeAboveTouch{
+                            portalHole.position.y = gameBottom + halfPortalHeight
+                        }else{
+                            portalHole.position.y = location.y + nodeAboveTouch
+                        }
+                        
+                        if location.x < gameLeft + halfPortalWidth {
+                            portalHole.position.x = halfPortalWidth
+                        }else if location.x > gameRight - halfPortalWidth{
+                            portalHole.position.x = gameRight - halfPortalWidth
+                        }else{
+                            portalHole.position.x = location.x
+                        }*/
                         
                         let portalHole = Portal()
                         addChild(portalHole)
@@ -580,12 +887,33 @@ class newBuildingScene: SKScene, SKPhysicsContactDelegate {
                             portalHole.position.x = location.x
                         }
                         
+                        let wait = SKAction.wait(forDuration: 5)
+                        let action = SKAction.run {
+                            portalHole.removeFromParent()
+                        }
+                        
+                        portalHole.run(SKAction.sequence([wait, action]))
+                        portalHole.start = NSDate()
+                        
+                        portalHole.physicsBody = SKPhysicsBody(rectangleOf: portalHole.size)
+                        portalHole.physicsBody?.affectedByGravity = false
+                        portalHole.physicsBody?.isDynamic = false
+                        portalHole.physicsBody?.contactTestBitMask = 7
+                        portalHole.physicsBody?.categoryBitMask = 0
+                        portalHole.physicsBody?.collisionBitMask = 7
+                        
+                        coolDown()
+                        removeTool()
+                        addRandomTool()
+                        displayTools()
+                        currentTool.text = getNameOfCurrentTool()
+
                     }
                     
                 }else if getCurrentTool() == .wall{
-                    if nodeName == "wallArea" || nodeName == "crack"  || (nodeName?.hasPrefix("openWindow"))! || (nodeName?.hasPrefix("window"))! || (nodeName?.hasPrefix("noCracks"))! || (nodeName?.hasPrefix("oldMan"))! {
+                    if nodeName == "wallArea" || nodeName == "crack"  || (nodeName?.hasPrefix("openWindow"))! || (nodeName?.hasPrefix("w"))! || (nodeName?.hasPrefix("noCracks"))! || (nodeName?.hasPrefix("oldMan"))! {
                         
-                        newWall = true
+                        /*newWall = true
                         canPressButton = false
                         
                         addChild(newWallArea)
@@ -596,7 +924,38 @@ class newBuildingScene: SKScene, SKPhysicsContactDelegate {
                         newWallArea.color = UIColor.red
                         newWallArea.alpha = 0.5
                         newWallArea.position.x = 160
-                        newWallArea.position.y = 320
+                        newWallArea.position.y = 320*/
+                        
+                        let n = SKSpriteNode()
+                        
+                        addChild(n)
+                        
+                        n.name = "newWallArea"
+                        n.size.height = 360
+                        n.size.width = 320
+                        n.color = UIColor.red
+                        n.alpha = 0.5
+                        n.position.x = 160
+                        n.position.y = 330
+                        
+                        for crack in cracks{
+                            if n.contains(crack.position){
+                                removeCrack(nodeAtPoint: crack)
+                                shouldMovePerson()
+                            }
+                        }
+                        
+                        coolDown()
+                        removeTool()
+                        addRandomTool()
+                        displayTools()
+                        currentTool.text = getNameOfCurrentTool()
+
+                        let wait = SKAction.wait(forDuration: 0.1)
+                        let action = SKAction.run {
+                            n.removeFromParent()
+                        }
+                        run(SKAction.sequence([wait,action]))
                     }
                 }else if getCurrentTool() == .ice{
                     let node = nodes(at: location)
@@ -616,6 +975,11 @@ class newBuildingScene: SKScene, SKPhysicsContactDelegate {
                             }
                             
                             i.run(SKAction.sequence([wait, code]))
+                            
+                            removeTool()
+                            addRandomTool()
+                            displayTools()
+                            currentTool.text = getNameOfCurrentTool()
                         }else if i.name == "oldMan"{
                             
                             if i.hasActions(){
@@ -632,6 +996,11 @@ class newBuildingScene: SKScene, SKPhysicsContactDelegate {
                                     }]))
                                 
                                 i.run(SKAction.sequence([wait, action]))
+                                
+                                removeTool()
+                                addRandomTool()
+                                displayTools()
+                                currentTool.text = getNameOfCurrentTool()
                             }
                             
                         }else if i.name == "crack"{
@@ -650,6 +1019,11 @@ class newBuildingScene: SKScene, SKPhysicsContactDelegate {
                                     }]))
                                 
                                 i.run(SKAction.sequence([wait, action]))
+                                
+                                removeTool()
+                                addRandomTool()
+                                displayTools()
+                                currentTool.text = getNameOfCurrentTool()
                             }
                             
                         }else if i.name == "robber"{
@@ -685,18 +1059,52 @@ class newBuildingScene: SKScene, SKPhysicsContactDelegate {
                                 }
                                 
                                 i.run(SKAction.sequence([wait,action]))
+                                
+                                removeTool()
+                                addRandomTool()
+                                displayTools()
+                                currentTool.text = getNameOfCurrentTool()
                             }
                         }
                         
                     }
                     
                 }else if getCurrentTool() == .health{
+                    
                     if (nodeName?.hasPrefix("man"))!{
                         let node = childNode(withName: nodeName!) as! Man
-                        
                         node.timesHit = 0
                         
-                        node.run(SKAction.colorize(with: UIColor.red, colorBlendFactor: 0, duration: 0))
+                        let n = node.children
+                        
+                        for i in n{
+                            if i.name == "face"{
+                                 i.run(SKAction.colorize(with: UIColor.red, colorBlendFactor: 0, duration: 0))
+                            }
+                        }
+                        
+                        removeTool()
+                        addRandomTool()
+                        displayTools()
+                        currentTool.text = getNameOfCurrentTool()
+            
+                    }else if nodeName == "face"{
+                        let node = nodeAtPoint.parent as! Man
+                        node.timesHit = 0
+                        
+                        let n = node.children
+                        
+                        for i in n{
+                            if i.name == "face"{
+                                i.run(SKAction.colorize(with: UIColor.red, colorBlendFactor: 0, duration: 0))
+                            }
+                        }
+                        
+                        removeTool()
+                        addRandomTool()
+                        displayTools()
+                        currentTool.text = getNameOfCurrentTool()
+
                     }
                 }else if getCurrentTool() == .police{
                     if nodeName == "robber"{
@@ -712,18 +1120,58 @@ class newBuildingScene: SKScene, SKPhysicsContactDelegate {
                         }else{
                             node.run(SKAction.sequence([SKAction.moveBy(x: -200, y: 0, duration: 2), action]))
                         }
+                        
+                        removeTool()
+                        addRandomTool()
+                        displayTools()
+                        currentTool.text = getNameOfCurrentTool()
                     }
                 }else if nodeName == "crack"{
-                    if currentState == .tutorial && tutorial5{
+                    if currentState == .tutorial && t6{
                         
-                        let wait = SKAction.wait(forDuration: crackInterval)
-                        let action = SKAction.run{
-                            self.tutorial1 = true
-                        }
+                        /*let wait = SKAction.wait(forDuration: 2)
+                         let action = SKAction.run{
+                         self.tutorial1 = true
+                         }
+                         
+                         run(SKAction.sequence([wait,action]))*/
                         
-                        run(SKAction.sequence([wait,action]))
+                        tapCrack.removeFromParent()
                         
-                        tutorial5 = false
+                        arrow1 = textureToNode(name: "arrow")
+                        arrow2 = textureToNode(name: "arrow")
+                        addChild(arrow1)
+                        addChild(arrow2)
+                        
+                        arrow1.zRotation = -((1/3) * CGFloat.pi)
+                        arrow1.zPosition = 3
+                        arrow1.position.x = 190
+                        arrow1.position.y = 165
+                        
+                        arrow2.zRotation = (4/3) * CGFloat.pi
+                        arrow2.zPosition = 3
+                        arrow2.position.x = 130
+                        arrow2.position.y = 165
+                        
+                        arrow1.xScale = 0.3
+                        arrow2.xScale = 0.3
+                        arrow1.yScale = 0.3
+                        arrow2.yScale = 0.3
+                        
+                        arrow1.name = "a1"
+                        arrow2.name = "a2"
+                        
+                        tapSwitch = textureToNode(name: "tapSwitch")
+                        addChild(tapSwitch)
+                        
+                        tapSwitch.xScale = 0.65
+                        tapSwitch.yScale = 0.65
+                        tapSwitch.position.x = 160
+                        tapSwitch.position.y = 380
+                        tapSwitch.zPosition = 3
+                        
+                        t6 = false
+                        t1 = true
                     }
                     
                     addRandomTool()
@@ -761,6 +1209,8 @@ class newBuildingScene: SKScene, SKPhysicsContactDelegate {
                 cementArea.position.y = location.y + nodeAboveTouch
             }
             
+            //cementArea.position.x = location.x
+            //cementArea.position.y = location.y
         }
         
         if tape{
@@ -793,10 +1243,12 @@ class newBuildingScene: SKScene, SKPhysicsContactDelegate {
         
     }
     
+    
+    
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+        
         if cement{
             for crack in cracks{
-                print(crack)
                 if cementArea.contains(crack.position){
                     removeCrack(nodeAtPoint: crack)
                     shouldMovePerson()
@@ -895,7 +1347,28 @@ class newBuildingScene: SKScene, SKPhysicsContactDelegate {
     
     override func update(_ currentTime: TimeInterval) {
         if currentState == .tutorial{
-            if tutorial1{
+            /*if tutorial1{
+             let crack = Crack()
+             addChild(crack)
+             
+             crack.zPosition = 1
+             crack.name = "crack"
+             crack.position.x = 45
+             crack.position.y = 250
+             
+             cracks.append(crack)
+             
+             crack.run(SKAction.colorize(with: UIColor.black, colorBlendFactor: 3, duration: 0))
+             
+             firstCrackStart = NSDate()
+             
+             self.view?.isUserInteractionEnabled = false
+             
+             tutorial2 = true
+             tutorial1 = false
+             }*/
+            
+            if t2{
                 let crack = Crack()
                 addChild(crack)
                 
@@ -912,41 +1385,70 @@ class newBuildingScene: SKScene, SKPhysicsContactDelegate {
                 
                 self.view?.isUserInteractionEnabled = false
                 
-                tutorial2 = true
-                tutorial1 = false
+                t2 = false
+                t3 = true
             }
             
-            if tutorial2{
+            if t3{
                 let end = NSDate()
                 
                 if end.timeIntervalSince(firstCrackStart as Date) > 1{
                     
+                    t3 = false
+                    
                     dropBrick(node: cracks[0])
                     
-                    addChild(tutorialLabel)
+                    fallingBrick = textureToNode(name: "fallingBrick")
+                    addChild(fallingBrick)
                     
-                    tutorialLabel.text = "A BRICK IS FALLING"
-                    tutorialLabel.fontName = "Didot Bold"
-                    tutorialLabel.fontSize = 28
-                    tutorialLabel.run(SKAction.colorize(with: UIColor.red, colorBlendFactor: 1, duration: 0))
-                    
-                    tutorialLabel.name = "label"
-                    tutorialLabel.position.x = 160
-                    tutorialLabel.position.y = 370
-                    tutorialLabel.zPosition = 4
+                    fallingBrick.name = "fallingBrick"
+                    fallingBrick.position.x = 160
+                    fallingBrick.position.y = 370
+                    fallingBrick.zPosition = 4
                     
                     let wait = SKAction.wait(forDuration: 0.3)
                     let code = SKAction.run {
                         self.view?.isUserInteractionEnabled = true
                         self.scene?.view?.isPaused = true
-                        self.tutorial3 = true
+                        self.ttt4 = true
                     }
                     
                     run(SKAction.sequence([wait,code]))
-                    
-                    tutorial2 = false
                 }
+                
             }
+            /*
+             if tutorial2{
+             let end = NSDate()
+             
+             if end.timeIntervalSince(firstCrackStart as Date) > 1{
+             
+             dropBrick(node: cracks[0])
+             
+             addChild(tutorialLabel)
+             
+             tutorialLabel.text = "A BRICK IS FALLING"
+             tutorialLabel.fontName = "Didot Bold"
+             tutorialLabel.fontSize = 28
+             tutorialLabel.run(SKAction.colorize(with: UIColor.red, colorBlendFactor: 1, duration: 0))
+             
+             tutorialLabel.name = "label"
+             tutorialLabel.position.x = 160
+             tutorialLabel.position.y = 370
+             tutorialLabel.zPosition = 4
+             
+             let wait = SKAction.wait(forDuration: 0.3)
+             let code = SKAction.run {
+             self.view?.isUserInteractionEnabled = true
+             self.scene?.view?.isPaused = true
+             self.tutorial3 = true
+             }
+             
+             run(SKAction.sequence([wait,code]))
+             
+             tutorial2 = false
+             }
+             }*/
         }else{
             if coolingDown == false{
                 coolDownLabel.removeFromParent()
@@ -964,8 +1466,8 @@ class newBuildingScene: SKScene, SKPhysicsContactDelegate {
                     addCrack()
                     crackStart = NSDate()
                     
-                    if crackInterval > 1.25{
-                        crackInterval -= 0.1
+                    if crackInterval > 1{
+                        crackInterval -= 0.2
                     }
                 }
             }
@@ -1040,48 +1542,45 @@ class newBuildingScene: SKScene, SKPhysicsContactDelegate {
         
         crack.run(SKAction.colorize(with: UIColor.black, colorBlendFactor: 3, duration: 0))
         
-        let tapCrackToRemove: SKLabelNode = SKLabelNode(fontNamed: "Georgia")
-        crack.addChild(tapCrackToRemove)
+        tapCrack = textureToNode(name: "tapCrack")
+        addChild(tapCrack)
+        tapCrack.zPosition = 3
+        tapCrack.position.x = 160
+        tapCrack.position.y = 380
+        tapCrack.xScale = 0.75
+        tapCrack.yScale = 0.75
         
-        tapCrackToRemove.text = "Tap Crack To Remove"
-        tapCrackToRemove.name = "someText"
-        tapCrackToRemove.fontSize = 24
-        tapCrackToRemove.zPosition = 3
-        tapCrackToRemove.position.x = 0
-        tapCrackToRemove.position.y = 50
-        tapCrackToRemove.run(SKAction.colorize(with: UIColor.red, colorBlendFactor: 1, duration: 0))
-        
-        let tapLabel: SKLabelNode = SKLabelNode(fontNamed: "Georgia")
-        crack.addChild(tapLabel)
-        
-        tapLabel.text = "Using Tools Below"
-        tapLabel.name = "someText"
-        tapLabel.fontSize = 24
-        tapLabel.zPosition = 3
-        tapLabel.position.x = 0
-        tapLabel.position.y = 25
-        tapLabel.run(SKAction.colorize(with: UIColor.red, colorBlendFactor: 1, duration: 0))
-        
-        let arrow1 = textureToNode(name: "arrow")
-        let arrow2 = textureToNode(name: "arrow")
-        crack.addChild(arrow1)
-        crack.addChild(arrow2)
-        
-        arrow1.zRotation = -45
-        arrow1.position.x = 45
-        arrow1.position.y = -180
-        
-        arrow2.zRotation = -90
-        arrow2.position.x = -25
-        arrow2.position.y = -180
-        
-        arrow1.xScale = 0.3
-        arrow2.xScale = 0.3
-        arrow1.yScale = 0.3
-        arrow2.yScale = 0.3
-        
-        arrow1.name = "efvr"
-        arrow2.name = "jkwsdan"
+        /*let tapLabel: SKLabelNode = SKLabelNode(fontNamed: "Georgia")
+         crack.addChild(tapLabel)
+         
+         tapLabel.text = "Using Tools Below"
+         tapLabel.name = "someText"
+         tapLabel.fontSize = 24
+         tapLabel.zPosition = 3
+         tapLabel.position.x = 0
+         tapLabel.position.y = 25
+         tapLabel.run(SKAction.colorize(with: UIColor.red, colorBlendFactor: 1, duration: 0))
+         
+         let arrow1 = textureToNode(name: "arrow")
+         let arrow2 = textureToNode(name: "arrow")
+         crack.addChild(arrow1)
+         crack.addChild(arrow2)
+         
+         arrow1.zRotation = -45
+         arrow1.position.x = 45
+         arrow1.position.y = -180
+         
+         arrow2.zRotation = -90
+         arrow2.position.x = -25
+         arrow2.position.y = -180
+         
+         arrow1.xScale = 0.3
+         arrow2.xScale = 0.3
+         arrow1.yScale = 0.3
+         arrow2.yScale = 0.3
+         
+         arrow1.name = "efvr"
+         arrow2.name = "jkwsdan"*/
     }
     
     func endTutorial(){
@@ -1093,8 +1592,6 @@ class newBuildingScene: SKScene, SKPhysicsContactDelegate {
     }
     
     func shouldMovePerson() {
-        //print(Score)
-        
         if manMovingInside == false{
             if Score >= numCracksToMove {
                 if Score % (numCracksToMove * 2) == 0{
@@ -1172,6 +1669,7 @@ class newBuildingScene: SKScene, SKPhysicsContactDelegate {
     }
     
     func removeCrack(nodeAtPoint: SKNode) {
+        
         let index = cracks.index(of: nodeAtPoint as! Crack)!
         cracks.remove(at: index)
         
@@ -1233,7 +1731,7 @@ class newBuildingScene: SKScene, SKPhysicsContactDelegate {
     
     func addRandomTool() {
         let userDefaults = UserDefaults.standard
-        let firstTime: [Bool] = userDefaults.array(forKey: "unlockedTools") as? [Bool] ?? emptyArray
+        let firstTime: [Bool] = userDefaults.array(forKey: "unlockedTools") as? [Bool] ?? []
         
         var unlockedTools: [Bool] = []
         
@@ -1248,17 +1746,17 @@ class newBuildingScene: SKScene, SKPhysicsContactDelegate {
         
         var i = Int(arc4random_uniform(UInt32(unlockedTools.count)))
         
-        while unlockedTools[i] == false{
+        while unlockedTools[i] == false || previousTool == i || i == 9{
             i = Int(arc4random_uniform(UInt32(unlockedTools.count)))
         }
         
         if currentState == .tutorial{
-            while i != 1 &&  i != 0{
+            while i != 1 && i != 0{
                 i = Int(arc4random_uniform(UInt32(unlockedTools.count)))
             }
         }
         
-        var randTool: tools = .cement
+        var randTool: tools = .glue
         
         switch i {
         case 0:
@@ -1287,7 +1785,17 @@ class newBuildingScene: SKScene, SKPhysicsContactDelegate {
             randTool = .glue
         }
         
+        if randTool == .wall{
+            let r = arc4random_uniform(3)
+            
+            if r == 0{
+                randTool = .cement
+            }
+        }
+        
         toolList.append(randTool)
+        
+        previousTool = i
     }
     
     func removeTool() {
@@ -1296,6 +1804,13 @@ class newBuildingScene: SKScene, SKPhysicsContactDelegate {
             toolPics[i].removeFromParent()
         }
         toolPics.removeAll()
+        
+        /*let point = self.addPointer(box: self.b1)
+         self.previousPointer.removeFromParent()
+         self.previousPointer = point
+         self.pointerPosition = 1
+         self.currentTool.text = self.getNameOfCurrentTool()*/
+        
     }
     
     func addPointer(box: SKSpriteNode) -> SKNode{
@@ -1367,10 +1882,10 @@ class newBuildingScene: SKScene, SKPhysicsContactDelegate {
     
     func gameOver() {
         Answers.logLevelEnd("\(buildingMenu.buildingName)",
-                            score: Score as NSNumber,
-                            success: true,
-                            customAttributes: [
-                                "Money Collected": moneyCollected
+            score: Score as NSNumber,
+            success: true,
+            customAttributes: [
+                "Money Collected": moneyCollected
             ])
         
         let path = Bundle.main.path(forResource: "SummerSunday.wav", ofType:nil)!
@@ -1396,7 +1911,7 @@ class newBuildingScene: SKScene, SKPhysicsContactDelegate {
         retryButton.selectedHandler = { [weak self] in
             let skView = self?.view as SKView!
             
-            guard let scene = GameScene(fileNamed:"\(buildingMenu.buildingName)") as GameScene! else { return }
+            guard let scene = SKScene(fileNamed:"\(buildingMenu.buildingName)") as SKScene! else { return }
             
             scene.scaleMode = .aspectFill
             skView?.presentScene(scene)
@@ -1405,7 +1920,7 @@ class newBuildingScene: SKScene, SKPhysicsContactDelegate {
         homeButton.selectedHandler = { [weak self] in
             let skView = self?.view as SKView!
             
-            guard let scene = GameScene(fileNamed:"buildingsMenu") as GameScene! else { return }
+            guard let scene = SKScene(fileNamed:"buildingsMenu") as SKScene! else { return }
             
             scene.scaleMode = .aspectFill
             skView?.presentScene(scene)
@@ -1656,10 +2171,10 @@ class newBuildingScene: SKScene, SKPhysicsContactDelegate {
             let node: Man = man as! Man
             
             /*for n in allNodes{
-                if (n.name?.hasPrefix("man"))!{
-                    node = n as! Man
-                }
-            }*/
+             if (n.name?.hasPrefix("man"))!{
+             node = n as! Man
+             }
+             }*/
             
             let time: TimeInterval = 1
             
@@ -1735,7 +2250,7 @@ class newBuildingScene: SKScene, SKPhysicsContactDelegate {
                     moveNewPerson(location: node.position)
                 }
                 
-                run(SKAction.playSoundFileNamed("flee", waitForCompletion: false))
+                //run(SKAction.playSoundFileNamed("flee", waitForCompletion: false))
                 
                 //node.run(SKAction.colorize(with: UIColor.cyan, colorBlendFactor: 1, duration: 0.1))
                 
@@ -1752,40 +2267,58 @@ class newBuildingScene: SKScene, SKPhysicsContactDelegate {
                 
                 face.run(SKAction.colorize(with: UIColor.red, colorBlendFactor: face.colorBlendFactor + 1/timesHitToLeave, duration: 0))
                 
-                if tutorial4{
+                if tt4{
                     self.view?.isUserInteractionEnabled = false
+                    
+                    /*tutorialLabel.text = "A PERSON LEAVES IF THEY"
+                     tutorialLabel.fontName = "Didot Bold"
+                     tutorialLabel.fontSize = 20
+                     tutorialLabel.run(SKAction.colorize(with: UIColor.red, colorBlendFactor: 1, duration: 0))
+                     
+                     tutorialLabel.name = "label"
+                     tutorialLabel.position.x = 160
+                     tutorialLabel.position.y = 380
+                     tutorialLabel.zPosition = 4
+                     
+                     tutorialLabel2.text = "GET HIT \(Int(timesHitToLeave)) TIMES"
+                     tutorialLabel2.fontName = "Didot Bold"
+                     tutorialLabel2.fontSize = 20
+                     tutorialLabel2.run(SKAction.colorize(with: UIColor.red, colorBlendFactor: 1, duration: 0))
+                     
+                     tutorialLabel2.name = "label"
+                     tutorialLabel2.position.x = 160
+                     tutorialLabel2.position.y = tutorialLabel.position.y - 24
+                     tutorialLabel2.zPosition = 4
+                     
+                     tutorial4 = false*/
+                    
+                    hit5 = textureToNode(name: "hit5")
+                    
+                    hit5.position.x = 160
+                    hit5.position.y = 400
+                    hit5.xScale = 0.55
+                    hit5.yScale = 0.55
+                    hit5.zPosition = 4
+                    
+                    leave = textureToNode(name: "leave")
+                    
+                    leave.position.x = 160
+                    leave.position.y = 370
+                    leave.xScale = 0.55
+                    leave.yScale = 0.55
+                    leave.zPosition = 4
                     
                     let wait = SKAction.wait(forDuration: 0.1)
                     let code = SKAction.run {
                         self.view?.isUserInteractionEnabled = true
-                        self.addChild(self.tutorialLabel)
-                        self.addChild(self.tutorialLabel2)
+                        self.addChild(self.hit5)
+                        self.addChild(self.leave)
                         
-                        self.tutorial6 = true
+                        self.t4 = true
                     }
                     self.run(SKAction.sequence([wait,code]))
                     
-                    tutorialLabel.text = "A PERSON LEAVES IF THEY"
-                    tutorialLabel.fontName = "Didot Bold"
-                    tutorialLabel.fontSize = 20
-                    tutorialLabel.run(SKAction.colorize(with: UIColor.red, colorBlendFactor: 1, duration: 0))
-                    
-                    tutorialLabel.name = "label"
-                    tutorialLabel.position.x = 160
-                    tutorialLabel.position.y = 380
-                    tutorialLabel.zPosition = 4
-                    
-                    tutorialLabel2.text = "GET HIT \(Int(timesHitToLeave)) TIMES"
-                    tutorialLabel2.fontName = "Didot Bold"
-                    tutorialLabel2.fontSize = 20
-                    tutorialLabel2.run(SKAction.colorize(with: UIColor.red, colorBlendFactor: 1, duration: 0))
-                    
-                    tutorialLabel2.name = "label"
-                    tutorialLabel2.position.x = 160
-                    tutorialLabel2.position.y = tutorialLabel.position.y - 24
-                    tutorialLabel2.zPosition = 4
-                    
-                    tutorial4 = false
+                    tt4 = false
                 }
             }
             previousNode = something
@@ -1817,7 +2350,24 @@ class newBuildingScene: SKScene, SKPhysicsContactDelegate {
                                         let node: Man = man as! Man
                                         let moneyLost = 100 - (node.timesHit * 25)
                                         self.moneyCollected += moneyLost
-                                        self.addText(node: man, t: "+\(moneyLost)", color: UIColor.green)
+                                        
+                                        let texture = SKTexture(imageNamed: "plus\(moneyLost)")
+                                        let label = SKSpriteNode(texture: texture)
+                                        self.addChild(label)
+                                        
+                                        label.name = "plus"
+                                        label.position.x = 160
+                                        label.position.y = 125
+                                        label.xScale = 0.65
+                                        label.yScale = 0.65
+                                        label.zPosition = 3
+                                        
+                                        let wait = SKAction.wait(forDuration: 2)
+                                        let code = SKAction.run {
+                                            label.removeFromParent()
+                                        }
+                                        
+                                        label.run(SKAction.sequence([wait,code]))
                                         
                                         self.manMovingInside = false
             }]))

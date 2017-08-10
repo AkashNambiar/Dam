@@ -9,6 +9,8 @@
 import UIKit
 import SpriteKit
 import GameplayKit
+import Crashlytics
+
 
 class GameViewController: UIViewController {
 
@@ -27,8 +29,8 @@ class GameViewController: UIViewController {
             
             view.ignoresSiblingOrder = true
             
-            view.showsFPS = true
-            view.showsNodeCount = true
+            //view.showsFPS = true
+            //view.showsNodeCount = true
         }
     }
 
