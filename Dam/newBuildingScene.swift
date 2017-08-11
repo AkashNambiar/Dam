@@ -325,7 +325,7 @@ class newBuildingScene: SKScene, SKPhysicsContactDelegate {
                 
                 guard let scene = SKScene(fileNamed:"buildingsMenu") as SKScene! else { return }
                 
-                scene.scaleMode = .aspectFill
+                scene.scaleMode = .aspectFit
                 skView?.presentScene(scene)
             }
             
@@ -1465,10 +1465,6 @@ class newBuildingScene: SKScene, SKPhysicsContactDelegate {
                 if time > crackInterval{
                     addCrack()
                     crackStart = NSDate()
-                    
-                    if crackInterval > 1{
-                        crackInterval -= 0.2
-                    }
                 }
             }
         }
@@ -1670,6 +1666,12 @@ class newBuildingScene: SKScene, SKPhysicsContactDelegate {
     
     func removeCrack(nodeAtPoint: SKNode) {
         
+        if crackInterval > 1.8{
+            crackInterval -= 0.12
+        }else if crackInterval > 1.1{
+            crackInterval -= 0.05
+        }
+        
         let index = cracks.index(of: nodeAtPoint as! Crack)!
         cracks.remove(at: index)
         
@@ -1689,6 +1691,12 @@ class newBuildingScene: SKScene, SKPhysicsContactDelegate {
             let tool = toolList[i]
             displayTool(tool: tool, i: i)
         }
+        
+        let point = self.addPointer(box: self.b1)
+        self.previousPointer.removeFromParent()
+        self.previousPointer = point
+        self.pointerPosition = 0
+        self.currentTool.text = self.getNameOfCurrentTool()
     }
     
     func displayTool(tool: tools, i: Int) {
@@ -1805,12 +1813,6 @@ class newBuildingScene: SKScene, SKPhysicsContactDelegate {
         }
         toolPics.removeAll()
         
-        /*let point = self.addPointer(box: self.b1)
-         self.previousPointer.removeFromParent()
-         self.previousPointer = point
-         self.pointerPosition = 1
-         self.currentTool.text = self.getNameOfCurrentTool()*/
-        
     }
     
     func addPointer(box: SKSpriteNode) -> SKNode{
@@ -1907,13 +1909,14 @@ class newBuildingScene: SKScene, SKPhysicsContactDelegate {
         
         retryButton.isHidden = false
         homeButton.isHidden = false
+        pauseButton.isHidden = true
         
         retryButton.selectedHandler = { [weak self] in
             let skView = self?.view as SKView!
             
             guard let scene = SKScene(fileNamed:"\(buildingMenu.buildingName)") as SKScene! else { return }
             
-            scene.scaleMode = .aspectFill
+            scene.scaleMode = .aspectFit
             skView?.presentScene(scene)
         }
         
@@ -1922,7 +1925,7 @@ class newBuildingScene: SKScene, SKPhysicsContactDelegate {
             
             guard let scene = SKScene(fileNamed:"buildingsMenu") as SKScene! else { return }
             
-            scene.scaleMode = .aspectFill
+            scene.scaleMode = .aspectFit
             skView?.presentScene(scene)
         }
         
@@ -2250,10 +2253,6 @@ class newBuildingScene: SKScene, SKPhysicsContactDelegate {
                     moveNewPerson(location: node.position)
                 }
                 
-                //run(SKAction.playSoundFileNamed("flee", waitForCompletion: false))
-                
-                //node.run(SKAction.colorize(with: UIColor.cyan, colorBlendFactor: 1, duration: 0.1))
-                
                 waitToRemove(node: node, time: time)
                 
                 peopleLeft += 1
@@ -2388,7 +2387,6 @@ class newBuildingScene: SKScene, SKPhysicsContactDelegate {
                 man.physicsBody = nil
                 man.name = "person"
                 
-                //man.run(SKAction.colorize(with: UIColor.green, colorBlendFactor: 1, duration: 0.1))
                 man.run(SKAction.sequence([SKAction.moveTo(x: 160, duration: moveTime),
                                            SKAction.run {
                                             self.openDoorClose(man: man)

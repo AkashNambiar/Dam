@@ -338,6 +338,8 @@ class buildingMenu: SKScene{
                                 digit.xScale = 0.4
                                 digit.yScale = 0.4
                                 digit.zPosition = 1
+                                
+                                self?.p.append(digit)
                             }
 
                             userDefaults.set(firstTime, forKey: "unlockedBuildings")
