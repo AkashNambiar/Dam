@@ -387,9 +387,10 @@ class newBuildingScene: SKScene, SKPhysicsContactDelegate {
         }
         
         let userDefaults = UserDefaults.standard
-        let tutorialCompleted = userDefaults.bool(forKey: "tutorialCompelted") as Bool ?? false
+        var tutorialCompleted = userDefaults.bool(forKey: "tutorialCompelted") as Bool ?? false
         userDefaults.synchronize()
 
+        tutorialCompleted = false
         
         if !tutorialCompleted{
             currentState = .tutorial
@@ -1540,6 +1541,7 @@ class newBuildingScene: SKScene, SKPhysicsContactDelegate {
         
         tapCrack = textureToNode(name: "tapCrack")
         addChild(tapCrack)
+        tapCrack.name = "kvm"
         tapCrack.zPosition = 3
         tapCrack.position.x = 160
         tapCrack.position.y = 380
@@ -1614,6 +1616,7 @@ class newBuildingScene: SKScene, SKPhysicsContactDelegate {
         crack.zPosition = 1
         crack.xScale = 1
         crack.yScale = 1
+        crack.name = "crack"
         
         var randPosition = randCrackPosition(crack: crack)
         
@@ -1626,8 +1629,7 @@ class newBuildingScene: SKScene, SKPhysicsContactDelegate {
         
         addChild(crack)
         crack.run(SKAction.colorize(with: UIColor.black, colorBlendFactor: 3, duration: 0))
-        
-        crack.name = "crack"
+
         
         crack.run(SKAction.repeatForever(SKAction.sequence([SKAction.wait(forDuration: 3.5),
                                                             SKAction.run {
@@ -1691,12 +1693,6 @@ class newBuildingScene: SKScene, SKPhysicsContactDelegate {
             let tool = toolList[i]
             displayTool(tool: tool, i: i)
         }
-        
-        let point = self.addPointer(box: self.b1)
-        self.previousPointer.removeFromParent()
-        self.previousPointer = point
-        self.pointerPosition = 0
-        self.currentTool.text = self.getNameOfCurrentTool()
     }
     
     func displayTool(tool: tools, i: Int) {
@@ -1732,6 +1728,7 @@ class newBuildingScene: SKScene, SKPhysicsContactDelegate {
         newTool.size = size
         newTool.zPosition = 1
         newTool.position = position
+        newTool.name = "tool"
         
         addChild(newTool)
         toolPics.append(newTool)
@@ -1961,6 +1958,7 @@ class newBuildingScene: SKScene, SKPhysicsContactDelegate {
         let moneySign = textureToNode(name: "money")
         addChild(moneySign)
         
+        moneySign.name = "f"
         moneySign.xScale = 0.8
         moneySign.yScale = 0.8
         moneySign.position.x = 100
@@ -1981,6 +1979,7 @@ class newBuildingScene: SKScene, SKPhysicsContactDelegate {
         
         let scoreLabel = textureToNode(name: "scoreLabel")
         addChild(scoreLabel)
+        scoreLabel.name = "dvfd"
         scoreLabel.xScale = 0.5
         scoreLabel.yScale = 0.5
         scoreLabel.position.x = 100
@@ -2293,6 +2292,7 @@ class newBuildingScene: SKScene, SKPhysicsContactDelegate {
                     
                     hit5 = textureToNode(name: "hit5")
                     
+                    hit5.name = "hit5"
                     hit5.position.x = 160
                     hit5.position.y = 400
                     hit5.xScale = 0.55
@@ -2301,6 +2301,7 @@ class newBuildingScene: SKScene, SKPhysicsContactDelegate {
                     
                     leave = textureToNode(name: "leave")
                     
+                    leave.name = "leave"
                     leave.position.x = 160
                     leave.position.y = 370
                     leave.xScale = 0.55
@@ -2335,11 +2336,13 @@ class newBuildingScene: SKScene, SKPhysicsContactDelegate {
         let door: SKSpriteNode = childNode(withName: "door") as! SKSpriteNode
         let open = textureToNode(name: "doorIsOpen")
         
-        addChild(open)
         
         open.position = door.position
         open.size = door.size
         open.zPosition = door.zPosition + 1
+        open.name = "open"
+        
+        addChild(open)
         
         open.run(SKAction.sequence([SKAction.wait(forDuration: 0.6),
                                     SKAction.run {

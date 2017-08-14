@@ -116,6 +116,7 @@ class buildingMenu: SKScene{
             let digit = SKSpriteNode(texture: texture)
             addChild(digit)
             
+            digit.name = "d"
             digit.position.x = firstX
             firstX += 25
             digit.position.y = 535
@@ -259,6 +260,7 @@ class buildingMenu: SKScene{
                             let digit = SKSpriteNode(texture: texture)
                             self.addChild(digit)
                             
+                            digit.name = "d"
                             digit.position.x = firstX
                             firstX += 20
                             digit.position.y = 340
@@ -332,6 +334,7 @@ class buildingMenu: SKScene{
                                 let digit = SKSpriteNode(texture: texture)
                                 self?.addChild(digit)
                                 
+                                digit.name = "d"
                                 digit.position.x = firstX
                                 firstX += 25
                                 digit.position.y = 535

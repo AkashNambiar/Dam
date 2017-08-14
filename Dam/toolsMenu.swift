@@ -81,6 +81,8 @@ class toolsMenu: SKScene {
         
         updateTools(opacity: 0.5, b: false)
         
+        //userDefaults.set(1000000, forKey: "money")
+        
         let number = "\(userDefaults.integer(forKey: "money"))"
         
         let array = number.characters.flatMap{Int(String($0))}
@@ -92,6 +94,7 @@ class toolsMenu: SKScene {
             let digit = SKSpriteNode(texture: texture)
             addChild(digit)
             
+            digit.name = "d"
             digit.position.x = firstX
             firstX += 25
             digit.position.y = 535
@@ -271,6 +274,7 @@ class toolsMenu: SKScene {
                     let digit = SKSpriteNode(texture: texture)
                     self.addChild(digit)
                     
+                    digit.name = "d"
                     digit.position.x = firstX
                     firstX += 20
                     digit.position.y = 340
@@ -349,6 +353,7 @@ class toolsMenu: SKScene {
                         let digit = SKSpriteNode(texture: texture)
                         self?.addChild(digit)
                         
+                        digit.name = "d"
                         digit.position.x = firstX
                         firstX += 25
                         digit.position.y = 535
