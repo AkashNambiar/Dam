@@ -240,7 +240,7 @@ class toolsInfo: SKScene {
             portalHole.size.height = 5
             portalHole.size.width = 90
             portalHole.position.x = 160
-            portalHole.position.y = 110
+            portalHole.position.y = 120
             
             let texture = SKTexture(imageNamed: "singleBrick")
             let brick = SKSpriteNode(texture: texture)
@@ -265,7 +265,7 @@ class toolsInfo: SKScene {
                 
                 brick.name = "singleBrick"
                 brick.position.x = 160
-                brick.position.y = 210
+                brick.position.y = 220
                 brick.zPosition = 2
                 brick.xScale = 0.15
                 brick.yScale = 0.15
@@ -291,14 +291,14 @@ class toolsInfo: SKScene {
             addChild(man)
             
             man.position.x = 160
-            man.position.y = 165
+            man.position.y = 180
             
             texture = SKTexture(imageNamed: "faceWithNeck")
             let face = SKSpriteNode(texture: texture)
             man.addChild(face)
             face.zPosition = 1
             face.position.x = 2
-            face.position.y = 84
+            face.position.y = 94
             
             face.run( SKAction.repeatForever(SKAction.sequence([SKAction.colorize(with: UIColor.red, colorBlendFactor: 0.9, duration: 1), SKAction.wait(forDuration: 0.1), SKAction.colorize(with: UIColor.red, colorBlendFactor: 0, duration: 1), SKAction.wait(forDuration: 0.1)])))
             

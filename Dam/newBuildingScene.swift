@@ -14,7 +14,7 @@ import Fabric
 import Crashlytics
 import AVFoundation
 
-class newBuildingScene: SKScene, SKPhysicsContactDelegate {
+class newBuildingScene: SKScene, SKPhysicsContactDelegate{
     
     enum tools {
         case glue, cement, tape, wood, lock, portal, wall, ice, health, police
@@ -142,8 +142,9 @@ class newBuildingScene: SKScene, SKPhysicsContactDelegate {
     var canPressButton = true
     
     var music: AVAudioPlayer!
-    
+
     override func didMove(to view: SKView) {
+        
         let path = Bundle.main.path(forResource: "titleScreen.mp3", ofType:nil)!
         let url = URL(fileURLWithPath: path)
         

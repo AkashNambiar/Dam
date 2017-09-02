@@ -10,13 +10,23 @@ import UIKit
 import SpriteKit
 import GameplayKit
 import Crashlytics
+import GoogleMobileAds
 
-
-class GameViewController: UIViewController {
-
+class GameViewController: UIViewController, GADBannerViewDelegate {
+    
+    @IBOutlet var bannerView: GADBannerView!
+    
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+
+        let request = GADRequest()
+        request.testDevices = [kGADSimulatorID]
+        bannerView.delegate = self
+        bannerView.adUnitID = "ca-app-pub-2722346464874425/2208899328"
+        bannerView.rootViewController = self
+        bannerView.load(request)
+        view.addSubview(bannerView)
+
         if let view = self.view as! SKView? {
             // Load the SKScene from 'GameScene.sks'
             if let scene = SKScene(fileNamed: "MainMenu") {

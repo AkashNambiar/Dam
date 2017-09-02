@@ -109,7 +109,7 @@ class buildingMenu: SKScene{
 
         let array = number.characters.flatMap{Int(String($0))}
         
-        var firstX: CGFloat = 85
+        var firstX: CGFloat = 125
         
         for n in array{
             let texture = SKTexture(imageNamed: "\(n)")
@@ -119,7 +119,7 @@ class buildingMenu: SKScene{
             digit.name = "d"
             digit.position.x = firstX
             firstX += 25
-            digit.position.y = 535
+            digit.position.y = 30
             digit.xScale = 0.4
             digit.yScale = 0.4
             digit.zPosition = 1
@@ -322,7 +322,7 @@ class buildingMenu: SKScene{
                             
                             let array = number.characters.flatMap{Int(String($0))}
                             
-                            var firstX: CGFloat = 85
+                            var firstX: CGFloat = 125
                             
                             for j in (self?.p)!{
                                 j.removeFromParent()
@@ -337,7 +337,7 @@ class buildingMenu: SKScene{
                                 digit.name = "d"
                                 digit.position.x = firstX
                                 firstX += 25
-                                digit.position.y = 535
+                                digit.position.y = 30
                                 digit.xScale = 0.4
                                 digit.yScale = 0.4
                                 digit.zPosition = 1

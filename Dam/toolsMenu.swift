@@ -87,7 +87,7 @@ class toolsMenu: SKScene {
         
         let array = number.characters.flatMap{Int(String($0))}
         
-        var firstX: CGFloat = 85
+        var firstX: CGFloat = 125
         
         for n in array{
             let texture = SKTexture(imageNamed: "\(n)")
@@ -97,7 +97,7 @@ class toolsMenu: SKScene {
             digit.name = "d"
             digit.position.x = firstX
             firstX += 25
-            digit.position.y = 535
+            digit.position.y = 30
             digit.xScale = 0.4
             digit.yScale = 0.4
             digit.zPosition = 6
@@ -342,7 +342,7 @@ class toolsMenu: SKScene {
 
                     let array = number.characters.flatMap{Int(String($0))}
                     
-                    var firstX: CGFloat = 85
+                    var firstX: CGFloat = 125
 
                     for i in (self?.p)!{
                         i.removeFromParent()
@@ -356,7 +356,7 @@ class toolsMenu: SKScene {
                         digit.name = "d"
                         digit.position.x = firstX
                         firstX += 25
-                        digit.position.y = 535
+                        digit.position.y = 30
                         digit.xScale = 0.4
                         digit.yScale = 0.4
                         digit.zPosition = 6
