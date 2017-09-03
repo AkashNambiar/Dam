@@ -171,45 +171,48 @@ class newBuildingScene: SKScene, SKPhysicsContactDelegate{
         retryButton.isHidden = true
         homeButton.isHidden = true
         playNow.isHidden = true
+        goHome.isHidden = true
         
         physicsWorld.contactDelegate = self
         
         beginFunc()
         
+        var br = SKSpriteNode()
+        let pr = textureToNode(name: "paused")
+        
         pauseButton.selectedHandler = { [weak self] in
             
             self?.playNow.isHidden = false
+            self?.goHome.isHidden = false
             
-            self?.goHome.isHidden = true
+            self?.goHome.isHidden = false
             self?.pauseButton.isHidden = true
             
-            var background = SKSpriteNode()
             let texture = SKTexture(imageNamed: "popUp")
-            background = SKSpriteNode(texture: texture)
+            br = SKSpriteNode(texture: texture)
             
-            self?.addChild(background)
+            self?.addChild(br)
             
-            background.name = "d"
-            background.size.height = 200
-            background.size.width = 305
-            background.position.x = 160
-            background.position.y = 335
-            background.zPosition = 5
+            br.name = "d"
+            br.size.height = 200
+            br.size.width = 305
+            br.position.x = 160
+            br.position.y = 335
+            br.zPosition = 5
             
-            let paused = self?.textureToNode(name: "paused")
-            self?.addChild(paused!)
-            paused?.name = "d"
-            paused?.position.x = 160
-            paused?.position.y = 370
-            paused?.zPosition = 6
+            self?.addChild(pr)
+            pr.name = "d"
+            pr.position.x = 160
+            pr.position.y = 370
+            pr.zPosition = 6
             
             self?.playNow.selectedHandler = { [weak self] in
-                background.removeFromParent()
-                paused?.removeFromParent()
+                br.removeFromParent()
+                pr.removeFromParent()
                 self?.playNow.isHidden = true
                 
+                self?.goHome.isHidden = true
                 self?.scene?.view?.isPaused = false
-                self?.goHome.isHidden = false
                 self?.pauseButton.isHidden = false
             }
             
@@ -219,12 +222,18 @@ class newBuildingScene: SKScene, SKPhysicsContactDelegate{
             }
             
             self?.run(SKAction.sequence([wait, code]))
+          
         }
         
         goHome.selectedHandler = { [weak self] in
+           
+            self?.scene?.view?.isPaused = false
+            
+            br.removeFromParent()
+            pr.removeFromParent()
             
             if self?.canPressButton == false {return}
-            
+            self?.playNow.isHidden = true
             self?.goHome.isHidden = true
             self?.pauseButton.isHidden = true
             
@@ -285,6 +294,7 @@ class newBuildingScene: SKScene, SKPhysicsContactDelegate{
                 
                 self?.goHome.isHidden = false
                 self?.pauseButton.isHidden = false
+                self?.goHome.isHidden = true
                 
                 self?.scene?.view?.isPaused = false
                 
@@ -390,8 +400,6 @@ class newBuildingScene: SKScene, SKPhysicsContactDelegate{
         let userDefaults = UserDefaults.standard
         var tutorialCompleted = userDefaults.bool(forKey: "tutorialCompelted") as Bool ?? false
         userDefaults.synchronize()
-
-        tutorialCompleted = false
         
         if !tutorialCompleted{
             currentState = .tutorial
